@@ -1,0 +1,29 @@
+---
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.0.1
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # - repo: https://github.com/Cretezy/flutter-format-pre-commit
+  #   rev: "master"
+  #   hooks:
+  #       - id: flutter-format
+  #         files: src/lib/*
+
+  - repo: https://github.com/TheJukebox/dart-format-pre-commit
+    rev: "c0a2056e90d7c78ac706726a2f517d2dd25c82fa"
+    hooks:
+      - id: dart-format
+        files: src/lib/*
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.23.0
+    hooks:
+      - id: yamllint
+        args: [-c=.yamllint]
