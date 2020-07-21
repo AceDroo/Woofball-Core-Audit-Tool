@@ -1,3 +1,3 @@
 # core-audit
 
-The core application for auditing streets.
+A core audit tool designed to audit locations based on dementia principles 
