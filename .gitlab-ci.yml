@@ -8,7 +8,7 @@ stages:
 variables:
   ARTIFACT_DIR: "artifacts-$CI_COMMIT_SHORT_SHA"
 
-image: registry.gitlab.com/woofball/woof-docker:latest
+image: registry.gitlab.com/woofball/woof-docker:dev-b1232f7c
 
 before_script:
   - export
