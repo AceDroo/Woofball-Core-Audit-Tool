@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geocoder/geocoder.dart';
 import 'package:location/location.dart';
 
+import 'search_bar.dart';
 import 'survey.dart';
 
 class Home extends StatefulWidget {
@@ -14,45 +17,91 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  static LatLng london = LatLng(51.5, -0.09);
 
-  MapController mapController = MapController();
+  Completer<GoogleMapController> _mapController = Completer();
+
+  Future<void> _updateCamera(String input) async {
+    var addresses = await Geocoder.local.findAddressesFromQuery(input);
+    var coords = addresses.first.coordinates;
+    print(
+      'Query "$input" returned (${coords.longitude}, ${coords.latitude})'
+    );
+    final GoogleMapController controller = await _mapController.future;
+    controller.animateCamera(
+        CameraUpdate.newCameraPosition(
+            CameraPosition(
+                target: LatLng(coords.latitude, coords.longitude),
+                zoom: 15
+            )
+        )
+    );
+  }
+  
+  
+  _updateLocation() async {
+    Location _location = new Location();
+    bool _serviceEnabled;
+    PermissionStatus _permission;
+    LocationData _locationData;
+
+    _serviceEnabled = await _location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await _location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permission = await _location.hasPermission();
+    if (_permission == PermissionStatus.denied){
+      _permission = await _location.requestPermission();
+      if (_permission != PermissionStatus.granted){
+        return;
+      }
+    }
+
+    _locationData = await _location.getLocation();
+    final GoogleMapController controller = await _mapController.future;
+    controller.animateCamera(
+        CameraUpdate.newCameraPosition(
+            CameraPosition(
+                target: LatLng(_locationData.latitude, _locationData.longitude),
+                zoom: 15
+            )
+        )
+    );
+
+
+  }
+
+  
+  static final CameraPosition _wollongongCam = CameraPosition(
+		bearing: 0,
+		target: LatLng(-34.4278, 150.8931),
+		zoom: 10  
+  ); 
 
   GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
 
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      //appBar: AppBar(title: const Text('Search here?')),
       extendBody: true,
       body: Stack(
-        children: [
-          FlutterMap(
-            mapController: mapController,
-            options: MapOptions(
-              center: LatLng(-34.405, 150.8785),
-              zoom: 10.0,
-              minZoom: 2.0,
+        children: <Widget>[
+          Container(
+            child: GoogleMap(
+              compassEnabled: false,
+              zoomControlsEnabled: false,
+              initialCameraPosition: _wollongongCam,
+							onMapCreated: (GoogleMapController controller) {
+								_mapController.complete(controller);
+							}, 
             ),
-            layers: [
-              TileLayerOptions(
-                  urlTemplate:
-                      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  subdomains: ['a', 'b', 'c']),
-              MarkerLayerOptions(
-                markers: [
-                  Marker(
-                    point: LatLng(-34.405, 150.8785),
-                    builder: (ctx) => Container(
-                      child: Icon(Icons.location_on),
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ),
-        ],
-      ),
+          SearchBar(hintText: 'Wollongong, NSW 2560', callback:_updateCamera),
+				],
+			),
       drawer: Drawer(
         child: ListView(
           children: <Widget>[
@@ -88,7 +137,6 @@ class _HomeState extends State<Home> {
         ),
       ),
       bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
         child: new Row(
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.start,
@@ -99,48 +147,40 @@ class _HomeState extends State<Home> {
                 _scaffoldKey.currentState.openDrawer();
               },
             ),
-            IconButton(
-              icon: Icon(Icons.search),
+          ],
+        ),
+      ),
+      floatingActionButton: Container(
+        margin: EdgeInsets.only(bottom:20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            FloatingActionButton(
+              heroTag: 'newSurvey',
               onPressed: () {
-                mapController.move(london, 18.0);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Survey(
+                        page: 0,
+                        editMode: false,
+                      )), // Go to survey page
+                );
               },
+              child: Icon(Icons.add_circle)
+            ),
+            SizedBox(height:10),
+            FloatingActionButton(
+              heroTag: 'getLocation',
+              onPressed: () {
+                _updateLocation();
+              },
+              child: Icon(Icons.my_location)
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            updateLocation();
-          },
-          child: Icon(Icons.my_location)),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
     );
-  }
-
-  updateLocation() async{
-    Location location = new Location();
-
-    bool _serviceEnabled;
-    PermissionStatus _permissionGranted;
-    LocationData _locationData;
-
-    _serviceEnabled = await location.serviceEnabled();
-    if (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-      if (!_serviceEnabled) {
-        return;
-      }
-    }
-
-    _permissionGranted = await location.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await location.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
-        return;
-      }
-    }
-
-    _locationData = await location.getLocation();
-    mapController.move(LatLng(_locationData.latitude, _locationData.longitude), 16.0);
   }
 }
