@@ -41,3 +41,18 @@ app.*.map.json
 
 # Exceptions to above rules.
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+
+# =============== #
+# Unity generated #
+# =============== #
+Library/
+Temp/
+*sln
+*csproj
+Logs/
+obj/
+.idea/
+sysinfo.txt
+*.stackdump
+/Assets/AssetStoreTools*
+*.unitypackage
