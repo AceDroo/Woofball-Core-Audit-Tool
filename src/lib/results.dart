@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:core_audit_tool/home.dart';
+import 'package:core_audit_tool/post_audit.dart';
 
 import 'survey.dart';
 import 'home.dart';
@@ -315,7 +316,19 @@ class _ResultsState extends State<Results> {
                                       );
                                     })
                               ],
-                            )))
+                            ))),
+                FlatButton(
+                    color: Theme.of(context).accentColor,
+                    textColor: Theme.of(context).accentTextTheme.button.color,
+                    child: Text("Perform Post Audit", style: TextStyle(fontSize: 16)),
+                    onPressed: () {
+                      //String platformVersion;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => PostAudit()), // Go to home page
+                      );
+                    })
               ],
             ),
           ],
