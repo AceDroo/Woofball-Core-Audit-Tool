@@ -24,14 +24,13 @@ lint:
     - flutter analyze
   when: always
 
-build appbundle:
+build debug:
   stage: build
   script:
-    - flutter build appbundle
-    - ls build/app/outputs/bundle/release
-    - mkdir -p ../${ARTIFACT_DIR}/appbundle
-    - echo "==CHECKING CONTENTS OF src/=="
-    - mv build/app/outputs/bundle/* ../${ARTIFACT_DIR}/appbundle
+    - flutter build apk --split-per-abi
+    - ls -la build/app/outputs/apk/release
+    - mkdir -p ../${ARTIFACT_DIR}/apk
+    - mv build/app/outputs/apk/* ../${ARTIFACT_DIR}/apk
   artifacts:
     paths:
       - "${ARTIFACT_DIR}/**"
