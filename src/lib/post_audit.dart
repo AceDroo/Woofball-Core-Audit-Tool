@@ -10,13 +10,12 @@ class UnityDemoScreen extends StatefulWidget {
   _UnityDemoScreenState createState() => _UnityDemoScreenState();
 }
 
-class _UnityDemoScreenState extends State<UnityDemoScreen>{
+class _UnityDemoScreenState extends State<UnityDemoScreen> {
   static final GlobalKey<ScaffoldState> _scaffoldKey =
   GlobalKey<ScaffoldState>();
   UnityWidgetController _unityWidgetController;
 
   Widget build(BuildContext context) {
-
     return Scaffold(
       key: _scaffoldKey,
       body: SafeArea(
