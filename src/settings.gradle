@@ -1,1 +1,1 @@
-include ':unity-classes'
+include ':unity-classes', ':arcore_client', ':unityandroidpermissions', ':UnityARCore'

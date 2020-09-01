@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-//import 'package:flutter/services.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_unity_widget/flutter_unity_widget.dart';
 
 class UnityDemoScreen extends StatefulWidget {
@@ -11,8 +11,7 @@ class UnityDemoScreen extends StatefulWidget {
 }
 
 class _UnityDemoScreenState extends State<UnityDemoScreen> {
-  static final GlobalKey<ScaffoldState> _scaffoldKey =
-  GlobalKey<ScaffoldState>();
+  static final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   UnityWidgetController _unityWidgetController;
 
   Widget build(BuildContext context) {
@@ -29,6 +28,7 @@ class _UnityDemoScreenState extends State<UnityDemoScreen> {
             color: Colors.yellow,
             child: UnityWidget(
               onUnityViewCreated: onUnityCreated,
+              isARScene: true,
             ),
           ),
         ),
