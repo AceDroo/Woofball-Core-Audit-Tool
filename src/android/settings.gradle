@@ -1,4 +1,4 @@
-include ':app', ':unity-classes'
+include ':app', ':unity-classes', ':arcore_client', ':unityandroidpermissions', ':UnityARCore'
 
 def flutterProjectRoot = rootProject.projectDir.parentFile.toPath()
 
