@@ -39,16 +39,15 @@ android {
         doNotStrip '*/armeabi-v7a/*.so'
         doNotStrip '*/arm64-v8a/*.so'
     }
-}
 
-buildTypes {
+    buildTypes {
         release {
             signingConfig signingConfigs.debug
         }
         debug {
             signingConfig signingConfigs.debug
         }
-        profile{
+        profile {
             signingConfig signingConfigs.debug
         }
         innerTest {
@@ -56,3 +55,4 @@ buildTypes {
             matchingFallbacks = ['debug', 'release']
         }
     }
+}
