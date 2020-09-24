@@ -6,7 +6,10 @@ import 'home.dart';
 //import 'results.dart';
 
 class Survey extends StatefulWidget {
-  Survey({Key key}) : super(key: key);
+  Survey(this._addr, {Key key}) : super(key: key);
+  
+  final String _addr;
+  
   _SurveyState createState() => _SurveyState();
 }
 
@@ -124,7 +127,7 @@ class _SurveyState extends State<Survey> {
         centerTitle: true,
         title: InkWell(
             child: Column(children: <Widget>[
-              Text("<<PLACEHOLDER>>"),
+              Text(widget._addr),
               Text("Tap to change location", style: TextStyle(fontSize: 12)),
             ]),
             onTap: () {

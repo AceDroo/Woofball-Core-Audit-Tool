@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:location/location.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 import 'search_bar.dart';
+import 'settings.dart';
 import 'survey.dart';
 
 class Home extends StatefulWidget {
@@ -19,6 +21,68 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
 
   Completer<GoogleMapController> _mapController = Completer();
+  Set<Marker> _markers = {};
+  Set<Circle> _circles = {};
+  bool _showNewSurvey = false;
+  LatLng _curPos;
+  String _addr;
+  String _mapStyle;
+
+  BitmapDescriptor surveyNew;
+  BitmapDescriptor surveyComplete;
+
+  void loadMapStyle(String file) async {
+    rootBundle.loadString(file).then((x) => {_mapStyle = x});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    BitmapDescriptor.fromAssetImage(
+      ImageConfiguration(size: Size(48,48)), 'assets/survey_new.bmp')
+      .then((onValue) {
+        surveyNew = onValue;
+      });
+    BitmapDescriptor.fromAssetImage(
+      ImageConfiguration(size: Size(48,48)), 'assets/survey_complete.bmp')
+      .then((onValue) {
+        surveyComplete = onValue;
+      });
+  }
+
+  Future<String> _getAddress(LatLng latlng) async {
+    final coords = new Coordinates(latlng.latitude, latlng.longitude);
+    var addresses = await Geocoder.local.findAddressesFromCoordinates(coords);
+    var first = addresses.first;
+    // refactor pls
+    if(first.subThoroughfare != null)
+      return "${first.subThoroughfare} ${first.thoroughfare}, ${first.locality}"; 
+    else
+      return "${first.thoroughfare}, ${first.locality}";
+  }
+
+  Future<void> _addMarker(LatLng latlng) async {
+    _curPos = latlng;
+    _addr = await _getAddress(_curPos);
+    setState((){
+      _markers.clear();
+      _circles.clear();
+      _markers.add(Marker(
+        markerId: MarkerId(latlng.toString()),
+        position: latlng,
+        icon: surveyNew,
+      ));
+      _circles.add(Circle(
+        circleId: CircleId(latlng.toString()),
+        center: latlng,
+        radius: 200.0,
+        fillColor: Colors.blueAccent.withOpacity(0.5),
+        strokeWidth: 3,
+        strokeColor: Colors.blueAccent,
+      ));
+      _showNewSurvey = true;
+    });
+  }
 
   Future<void> _updateCamera(String input) async {
     var addresses = await Geocoder.local.findAddressesFromQuery(input);
@@ -26,17 +90,18 @@ class _HomeState extends State<Home> {
     print(
       'Query "$input" returned (${coords.longitude}, ${coords.latitude})'
     );
+    LatLng latlng = LatLng(coords.latitude, coords.longitude);
     final GoogleMapController controller = await _mapController.future;
     controller.animateCamera(
         CameraUpdate.newCameraPosition(
             CameraPosition(
-                target: LatLng(coords.latitude, coords.longitude),
+                target: latlng,
                 zoom: 15
             )
         )
     );
+    _addMarker(latlng);
   }
-  
   
   _updateLocation() async {
     Location _location = new Location();
@@ -61,20 +126,31 @@ class _HomeState extends State<Home> {
     }
 
     _locationData = await _location.getLocation();
+    _curPos = LatLng(_locationData.latitude, _locationData.longitude);
     final GoogleMapController controller = await _mapController.future;
     controller.animateCamera(
         CameraUpdate.newCameraPosition(
             CameraPosition(
-                target: LatLng(_locationData.latitude, _locationData.longitude),
+                target: _curPos,
                 zoom: 15
             )
         )
     );
-
-
+  }
+ 
+  Future<void> _updateMap() async {
+    GoogleMapController controller = await _mapController.future;
+    setState(() {
+      if (Settings.mapTheme == 'night') {
+        loadMapStyle('assets/mapstyles/night.json');
+        controller.setMapStyle(_mapStyle);
+      } else {
+        _mapStyle = '[]';
+        controller.setMapStyle(_mapStyle);
+      }
+    });
   }
 
-  
   static final CameraPosition _wollongongCam = CameraPosition(
 		bearing: 0,
 		target: LatLng(-34.4278, 150.8931),
@@ -94,9 +170,17 @@ class _HomeState extends State<Home> {
               compassEnabled: false,
               zoomControlsEnabled: false,
               initialCameraPosition: _wollongongCam,
+              markers: _markers,
+              circles: _circles,
 							onMapCreated: (GoogleMapController controller) {
 								_mapController.complete(controller);
-							}, 
+                controller.setMapStyle(_mapStyle);
+							},
+              onTap: (LatLng latlng){
+                print("I got tapped @ $latlng");
+                _addMarker(latlng);
+                _updateCamera(latlng.toString());
+              },
             ),
           ),
           SearchBar(hintText: 'Wollongong, NSW 2560', callback:_updateCamera),
@@ -115,8 +199,13 @@ class _HomeState extends State<Home> {
             ListTile(
               title: Text('Settings'),
               onTap: () {
-                // Do something
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Settings(_updateMap),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -126,7 +215,7 @@ class _HomeState extends State<Home> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => Survey(), // Go to survey page
+                      builder: (context) => Survey(_addr), // Go to survey page
                   ),
                 );
               },
@@ -153,17 +242,23 @@ class _HomeState extends State<Home> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            FloatingActionButton(
-              heroTag: 'newSurvey',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => Survey(), // Go to survey page
-                  ),
-                );
-              },
-              child: Icon(Icons.add_circle)
+            AnimatedOpacity(
+              opacity: _showNewSurvey ? 1.0 : 0.0,
+              duration: Duration(milliseconds: 500),
+              child:
+              FloatingActionButton(
+                heroTag: 'newSurvey',
+                onPressed: () {
+                  if (_showNewSurvey)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => Survey(_addr), // Go to survey page
+                      ),
+                    );
+                },
+                child: Icon(Icons.add_circle)
+              ),
             ),
             SizedBox(height:10),
             FloatingActionButton(
