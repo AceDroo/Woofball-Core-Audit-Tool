@@ -50,6 +50,8 @@ flutter:
   assets:
     - assets/mapstyles/night.json
     - assets/questions.json
+    - assets/survey_new.bmp
+    - assets/survey_complete.bmp
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
