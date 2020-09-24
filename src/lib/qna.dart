@@ -8,7 +8,6 @@ class Services {
     return await rootBundle.loadString('assets/questions.json');
   }
 
-
   static Future<List<QuestionCollection>> loadQuestion() async {
     List<QuestionCollection> collections = List<QuestionCollection>();
     String title;
@@ -20,75 +19,206 @@ class Services {
     String jsonString = await _loadAQuestionAsset();
     final questionData = json.decode(jsonString);
 
-    for(var data in questionData.entries) {
-
+    for (var data in questionData.entries) {
       List<StatefulWidget> contents = List<StatefulWidget>();
 
+      // Get title and total elements found
       title = data.key.toString();
       int length = data.value.length;
 
-      for(int i = 0 ; i < length; i++){
+      // Add section title
+      Title sectionTitle = Title(title: title);
+      contents.add(sectionTitle);
+
+      for (int i = 0; i < length; i++) {
+        // Get question and its type
         question = data.value[i]['question'].toString();
         type = data.value[i]['options']['type'].toString();
 
-        debugPrint(question);
-        if(type == "slider"){
+        if (type == "slider") {
           min = data.value[i]['options']['min'];
           max = data.value[i]['options']['max'];
 
           SliderQuestion slider = SliderQuestion(min: min, max: max, text: question);
           contents.add(slider);
-
-        }else{
+        } else {
           CheckboxQuestion checkbox = CheckboxQuestion(text: question);
           contents.add(checkbox);
         }
       }
+
+      // Add spacer at the end of the question page
+      SurveyPageSpacer spacer = SurveyPageSpacer();
+      contents.add(spacer);
+
+      // Create collection and it to contents
       QuestionCollection collection = QuestionCollection(title: title, contents: contents);
       collections.add(collection);
     }
 
     return collections;
   }
+  static Future<List<Section>> loadSections(PageController _controller) async {
+    List<Section> sections = List<Section>();
+    String title;
+
+    String jsonString = await _loadAQuestionAsset();
+    final questionData = json.decode(jsonString);
+
+    sections.add(new Section(title: "Header"));
+
+    int i = 0;
+    for (var data in questionData.entries) {
+      // Get title
+      title = data.key.toString();
+
+      // Create section and add it to list
+      Section section = Section(title: title, page: i);
+      section.setController(_controller);
+      sections.add(section);
+
+      i++;
+    }
+
+    return sections;
+  }
 }
 
 class QuestionCollection extends StatefulWidget {
   final String title;
   final List<StatefulWidget> contents;
-  
+
   QuestionCollection({Key key, this.title, this.contents}) : super(key: key);
 
   @override
   _QuestionCollectionState createState() => _QuestionCollectionState();
-
 }
 
 class _QuestionCollectionState extends State<QuestionCollection> {
   @override
   Widget build(BuildContext ctx) {
-    return ListView(children: widget.contents); 
+    ListView view = ListView(
+      padding: EdgeInsets.all(16.0),
+      children: <Widget>[
+        DefaultTextStyle(
+            style: Theme.of(context).textTheme.bodyText2,
+            textAlign: TextAlign.center,
+            textWidthBasis: TextWidthBasis.parent,
+            child: Center(
+              widthFactor: 100,
+              child: Column(
+                children: widget.contents,
+              ),
+            ))
+      ],
+    );
+    return view;
   }
 }
 
+// Title
+class Title extends StatefulWidget {
+  final String title;
+
+  Title({Key key, this.title}) : super(key: key);
+
+  @override
+  _TitleState createState() => _TitleState();
+}
+class _TitleState extends State<Title> {
+  @override
+  Widget build(BuildContext ctx) {
+    return Container(
+        child:
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+              Text("\n" + widget.title + " ", style: TextStyle(color: Colors.blue, fontSize: 24, fontWeight: FontWeight.bold)),
+              InkWell(
+                  child: new Text("?", style: TextStyle(color: Colors.blue, fontSize: 18, decoration: TextDecoration.underline)),
+                  onTap: () {
+                    showDialog(context: ctx,
+                        builder: (ctx) => new AlertDialog(
+                          title: Text(widget.title),
+                          content: Text("Hello There!"),
+                        )
+                    );
+                  })
+            ])
+    );
+  }
+}
+
+// Survey Page Spacer
+class SurveyPageSpacer extends StatefulWidget {
+  SurveyPageSpacer();
+
+  @override
+  _SurveyPageSpacer createState() => _SurveyPageSpacer();
+}
+class _SurveyPageSpacer extends State<SurveyPageSpacer> {
+  @override
+  Widget build(BuildContext ctx) {
+    return SizedBox(height: 64);
+  }
+}
+
+// Section
+// ignore: must_be_immutable
+class Section extends StatefulWidget {
+  final String title;
+  final int page;
+  PageController controller;
+
+  Section({Key key, this.title, this.page}) : super(key : key);
+
+  void setController(PageController controller) {
+    this.controller = controller;
+  }
+
+  @override
+  _SectionState createState() => _SectionState();
+}
+
+class _SectionState extends State<Section> {
+  @override
+  Widget build(BuildContext context) {
+    if (widget.title == "Header") {
+      return Center(
+        heightFactor: 2,
+        child: Text (
+          "Sections", style: TextStyle(color: Colors.blue, fontSize: 24, fontWeight: FontWeight.bold))
+      );
+    }
+    return ListTile(
+        title: Text(widget.title),
+        onTap: () {
+          print(widget.page);
+          if (widget.controller != null) {
+            widget.controller.jumpToPage(widget.page);
+            Navigator.pop(context);
+          }
+        }
+    );
+  }
+}
+
+// Question
 class Question extends StatefulWidget {
   final String text;
- // final double weight;
+  // final double weight;
 
   Question({Key key, this.text}) : super(key: key);
 
   @override
   _QuestionState createState() => _QuestionState();
 }
-
 class _QuestionState extends State<Question> {
   @override
   Widget build(BuildContext ctx) {
-    return Container(
-      child: Text(widget.text)
-    );
+    return Container(child: Text(widget.text));
   }
 }
 
+// Slider Question
 class SliderQuestion extends StatefulWidget {
   final int min;
   final int max;
@@ -98,87 +228,81 @@ class SliderQuestion extends StatefulWidget {
 
   @override
   _SliderQuestionState createState() => _SliderQuestionState();
-
 }
-
 class _SliderQuestionState extends State<SliderQuestion> {
   double _sliderVal = 0;
   String _hintLabel = "Not at all";
-  
+
   @override
   Widget build(BuildContext ctx) {
-    return Column(
-      children: <Widget>[
-        Question(text: widget.text),
-        Slider(
-          value: _sliderVal,
-          min: widget.min.toDouble(),
-          max: widget.max.toDouble(),
-          divisions: widget.max,
-          label: _hintLabel,
-          onChanged: (value){
-            setState(() {
-              switch(value.toInt()) {
-                case 0:
-                  print("NEW VAL: $value");
-                  _sliderVal = value;
-                  _hintLabel = "Not at all";
-                  break;
-                case 1:
-                  print("NEW VAL: $value");
-                  _sliderVal = value;
-                  _hintLabel = "Rarely";
-                  break;
-                case 2:
-                  print("NEW VAL: $value");
-                  _sliderVal = value;
-                  _hintLabel = "Occasionally";
-                  break;
-                case 3:
-                  print("NEW VAL: $value");
-                  _sliderVal = value;
-                  _hintLabel = "Frequently";
-                  break;
-                case 4:
-                  print("NEW VAL: $value");
-                  _sliderVal = value;
-                  _hintLabel = "Very Frequently";
-                  break;
-              }
-            });
-          },
-        )
-      ]
-    );
+    return Column(children: <Widget>[
+      Question(text: widget.text),
+      Slider(
+        value: _sliderVal,
+        min: widget.min.toDouble(),
+        max: widget.max.toDouble(),
+        divisions: widget.max,
+        label: _hintLabel,
+        onChanged: (value) {
+          setState(() {
+            switch (value.toInt()) {
+              case 0:
+                print("NEW VAL: $value");
+                _sliderVal = value;
+                _hintLabel = "Not at all";
+                break;
+              case 1:
+                print("NEW VAL: $value");
+                _sliderVal = value;
+                _hintLabel = "Rarely";
+                break;
+              case 2:
+                print("NEW VAL: $value");
+                _sliderVal = value;
+                _hintLabel = "Occasionally";
+                break;
+              case 3:
+                print("NEW VAL: $value");
+                _sliderVal = value;
+                _hintLabel = "Frequently";
+                break;
+              case 4:
+                print("NEW VAL: $value");
+                _sliderVal = value;
+                _hintLabel = "Very Frequently";
+                break;
+            }
+          });
+        },
+      )
+    ]);
   }
 }
 
-class CheckboxQuestion extends StatefulWidget{
+// Checkbox Question
+class CheckboxQuestion extends StatefulWidget {
   final String text;
 
-  CheckboxQuestion({Key key,this.text}) : super(key: key);
+  CheckboxQuestion({Key key, this.text}) : super(key: key);
 
   @override
   _CheckboxQuestionState createState() => _CheckboxQuestionState();
-
 }
-
-class _CheckboxQuestionState extends State<CheckboxQuestion>{
+class _CheckboxQuestionState extends State<CheckboxQuestion> {
   bool yesVal = false;
   @override
   Widget build(BuildContext ctx) {
-    return Column(
-        children: <Widget>[
-          Question(text: widget.text),
-          Checkbox(
-            value: yesVal,
-            onChanged: (bool value) {
-              setState(() {
-                yesVal = value;
-              });
-            }
-          )
-        ]
-    );
+    return Column(children: <Widget>[
+      CheckboxListTile(
+        title: Text(widget.text),
+        value: yesVal,
+        onChanged: (bool value) {
+          setState(() {
+            yesVal = value;
+          });
+        },
+      ),
+    ]);
   }
 }
+
