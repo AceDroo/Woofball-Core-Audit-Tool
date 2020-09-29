@@ -2,14 +2,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'qna.dart';
-import 'home.dart';
-//import 'results.dart';
+import 'results.dart';
 
 class Survey extends StatefulWidget {
-  Survey(this._addr, {Key key}) : super(key: key);
-  
-  final String _addr;
-  
+  final String address;
+  final int page;
+  final bool editMode;
+
+  Survey({Key key, this.address, this.page, this.editMode}) : super(key: key);
+
   _SurveyState createState() => _SurveyState();
 }
 
@@ -29,7 +30,7 @@ class _SurveyState extends State<Survey> {
   void initState() {
     super.initState();
     if (currentUnset) {
-      currentPage = 0;
+      currentPage = widget.page;
       currentUnset = false;
     }
 
@@ -75,9 +76,7 @@ class _SurveyState extends State<Survey> {
           }
 
           return Drawer(
-            child: ListView (
-              children: sectionsChildren
-            )
+            child: ListView (children: sectionsChildren)
           );
         }
     );
@@ -127,7 +126,7 @@ class _SurveyState extends State<Survey> {
         centerTitle: true,
         title: InkWell(
             child: Column(children: <Widget>[
-              Text(widget._addr),
+              Text(widget.address),
               Text("Tap to change location", style: TextStyle(fontSize: 12)),
             ]),
             onTap: () {
@@ -151,7 +150,7 @@ class _SurveyState extends State<Survey> {
               },
               child: Icon(Icons.navigate_before),
             ),
-            if (currentPage < totalPages - 1 || currentPage == 0)
+            if ((currentPage < totalPages - 1 || currentPage == 0) && (!widget.editMode))
               FloatingActionButton(
                 heroTag: 'nextFAB',
                 onPressed: () {
@@ -162,14 +161,14 @@ class _SurveyState extends State<Survey> {
                 },
                 child: Icon(Icons.navigate_next),
               ),
-            if (currentPage >= totalPages - 1 && currentPage != 0)
+            if ((currentPage >= totalPages - 1 && currentPage != 0) || (widget.editMode))
               FloatingActionButton(
                 heroTag: 'submitFAB',
                 onPressed: () {
                   _pageController.jumpToPage(0);
                   Navigator.pop(context);
                   Navigator.push(
-                      context, MaterialPageRoute(builder: (context) => Home()));
+                      context, MaterialPageRoute(builder: (context) => Results(widget.address)));
                   print("Reached end of survey!");
                 },
                 child: Icon(Icons.done),

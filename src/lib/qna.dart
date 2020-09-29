@@ -3,6 +3,8 @@ import 'dart:async' show Future;
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'survey.dart';
+
 class Services {
   static Future<String> _loadAQuestionAsset() async {
     return await rootBundle.loadString('assets/questions.json');
@@ -82,6 +84,45 @@ class Services {
 
     return sections;
   }
+  static Future<List<DetailedReportSection>> loadDetailedReport(String _address) async {
+    List<DetailedReportSection> sections = List<DetailedReportSection>();
+    String title;
+    String question;
+
+    String jsonString = await _loadAQuestionAsset();
+    final questionData = json.decode(jsonString);
+
+    int sectionNum = 1;
+    for (var data in questionData.entries) {
+      List<StatefulWidget> contents = List<StatefulWidget>();
+
+      // Get title and total elements found
+      title = data.key.toString();
+      int length = data.value.length;
+
+      print(sectionNum.toString() + ". " + title);
+
+      for (int i = 0; i < length; i++) {
+        // Get question and its type
+        question = data.value[i]['question'].toString();
+
+        TextLink link = new TextLink(section: sectionNum, questionNumber: i + 1, questionText: question, result: 1, address: _address);
+
+        contents.add(link);
+
+        print(sectionNum.toString() + "." + i.toString() + ". " + question);
+      }
+
+      // Increment section number
+      sectionNum++;
+
+      // Create collection and it to contents
+      DetailedReportSection section = DetailedReportSection(title: title, contents: contents);
+      sections.add(section);
+    }
+
+    return sections;
+  }
 }
 
 class QuestionCollection extends StatefulWidget {
@@ -125,6 +166,7 @@ class Title extends StatefulWidget {
   @override
   _TitleState createState() => _TitleState();
 }
+
 class _TitleState extends State<Title> {
   @override
   Widget build(BuildContext ctx) {
@@ -306,3 +348,59 @@ class _CheckboxQuestionState extends State<CheckboxQuestion> {
   }
 }
 
+class DetailedReportSection extends StatefulWidget {
+  final String title;
+  final List<StatefulWidget> contents;
+
+  DetailedReportSection({Key key, this.title, this.contents}) : super(key: key);
+
+  @override
+  _DetailedReportSectionState createState() => _DetailedReportSectionState();
+}
+
+class _DetailedReportSectionState extends State<DetailedReportSection> {
+  @override
+  Widget build(BuildContext ctx) {
+    return ExpansionTile(
+        title: Text(widget.title),
+        children: widget.contents
+    );
+  }
+}
+
+
+class TextLink extends StatefulWidget {
+  final int section;
+  final int questionNumber;
+  final String questionText;
+  final int result;
+  final String address;
+
+  TextLink({Key key, this.section, this.questionNumber, this.questionText, this.result, this.address}) : super(key : key);
+
+  @override
+  _TextLinkState createState() => _TextLinkState();
+}
+
+class _TextLinkState extends State<TextLink> {
+  @override
+  Widget build(BuildContext context) {
+    // Build text string
+    String sectionNum = widget.section.toString() + " " + widget.questionNumber.toString() + ". ";
+    String sectionInfo = widget.questionText + " - " + widget.result.toString() + "\n";
+
+    // Return container
+    return Container(
+      width: 350,
+      child: InkWell(
+        child: Text(sectionNum + sectionInfo, style: TextStyle(fontSize: 16), textAlign: TextAlign.left),
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => Survey(address: widget.address, page: widget.section, editMode: true)) // Go to survey page
+          );
+        }
+      ),
+    );
+  }
+}
