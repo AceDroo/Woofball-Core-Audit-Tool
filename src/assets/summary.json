@@ -1,0 +1,17 @@
+{
+  "summaryReport":
+  [
+    {
+      "problem": "Lack of light sources",
+      "solution": "Add light posts"
+    },
+    {
+      "problem": "Lack of shelter",
+      "solution": "Add trees or undercover shelter"
+    },
+    {
+      "problem": "Lack of signs and landmarks",
+      "solution": "Add proper signage and landmarks"
+    }
+  ]
+}

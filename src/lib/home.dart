@@ -215,7 +215,7 @@ class _HomeState extends State<Home> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => Survey(_addr), // Go to survey page
+                      builder: (context) => Survey(address: _addr, page: 0, editMode: false), // Go to survey page
                   ),
                 );
               },
@@ -253,7 +253,7 @@ class _HomeState extends State<Home> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => Survey(_addr), // Go to survey page
+                        builder: (context) => Survey(address: _addr, page: 0, editMode: false), // Go to survey page
                       ),
                     );
                 },
