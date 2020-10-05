@@ -10,12 +10,18 @@ variables:
 
 image: registry.gitlab.com/woofball/woof-docker:latest
 
+.inject_key: &inject_key
+  script:
+    - echo "Injecting Google Maps API key..."
+    - echo "api.token=${GOOGLE_API_TOKEN}" >> $CI_PROJECT_DIR/src/android/local.properties
+
 before_script:
   - export
   - flutter --version
   # currently all jobs need to run from the src dir
   # this could change, so here's a comment to remind everyone
   - mkdir -p ${ARTIFACT_DIR}
+  - &inject_key
   - cd src/
 
 lint:
