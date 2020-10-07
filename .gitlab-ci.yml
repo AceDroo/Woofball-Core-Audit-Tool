@@ -2,8 +2,7 @@
 stages:
   - lint
   - build
-  - create release
-  - publish
+  - prepare release
 
 variables:
   ARTIFACT_DIR: "artifacts-$CI_COMMIT_SHORT_SHA"
@@ -81,3 +80,7 @@ build appbundle release:
   only:
     - master
     - tags
+
+prepare release:
+  stage: release
+  script:
