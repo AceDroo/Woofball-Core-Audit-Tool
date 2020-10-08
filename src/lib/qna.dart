@@ -7,13 +7,14 @@ import 'survey.dart';
 
 class Services {
   static Future<String> _loadAQuestionAsset() async {
-    return await rootBundle.loadString('assets/questions.json');
+    return await rootBundle.loadString('assets/segment_questions.json');
   }
 
   static Future<List<QuestionCollection>> loadQuestion() async {
     List<QuestionCollection> collections = List<QuestionCollection>();
     String title;
     String question;
+    double weighting;
     String type;
     int min;
     int max;
@@ -36,6 +37,8 @@ class Services {
         // Get question and its type
         question = data.value[i]['question'].toString();
         type = data.value[i]['options']['type'].toString();
+        weighting = data.value[i]['weighting'];
+        print("Weighting: " + weighting.toString());
 
         if (type == "slider") {
           min = data.value[i]['options']['min'];

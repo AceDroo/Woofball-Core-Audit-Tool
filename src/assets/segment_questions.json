@@ -7,7 +7,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.25
     },
     {
       "id": "0102",
@@ -16,7 +17,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.25
     },
     {
       "id": "0103",
@@ -25,7 +27,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.25
     },
     {
       "id": "0104",
@@ -34,7 +37,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.25
     }
   ],
   "Legible Environment": [
@@ -43,14 +47,16 @@
       "question": "I know what type of street I'm on. (Main street, side street, arterial or residential)",
       "options": {
         "type": "checkbox"
-      }
+      },
+      "weighting": 0.1666
     },
     {
       "id": "0202",
       "question": "I can see beyond the next intersection or bend",
       "options": {
         "type": "checkbox"
-      }
+      },
+      "weighting": 0.1666
     },
     {
       "id": "0203",
@@ -59,7 +65,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.1666
     },
     {
       "id": "0204",
@@ -68,7 +75,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.1666
     },
     {
       "id": "0205",
@@ -77,7 +85,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.1666
     },
     {
       "id": "0206",
@@ -86,7 +95,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.1666
     }
   ],
   "Distinctive Environment": [
@@ -97,7 +107,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.33
     },
     {
       "id": "0302",
@@ -106,7 +117,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.33
     },
     {
       "id": "0303",
@@ -115,7 +127,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.33
     }
   ],
   "Accessible Environment": [
@@ -126,7 +139,8 @@
         "type": "slider",
         "min": 0,
         "max": 2
-      }
+      },
+      "weighting": 0.166
     },
     {
       "id": "0402",
@@ -135,7 +149,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.166
     },
     {
       "id": "0403",
@@ -144,7 +159,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.166
     },
     {
       "id": "0404",
@@ -153,7 +169,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.166
     },
     {
       "id": "0405",
@@ -162,7 +179,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.166
     }
   ],
   "Safe Environment": [
@@ -171,42 +189,48 @@
       "question": "The footpath is separated from bicycle lanes if present.",
       "options": {
         "type": "checkbox"
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0502",
       "question": "Footpath paving is plain",
       "options": {
         "type": "checkbox"
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0503",
       "question": "Footpath paving is non reflective",
       "options": {
         "type": "checkbox"
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0504",
       "question": "The footpath is flat and smooth",
       "options": {
         "type": "checkbox"
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0505",
       "question": "The footpath is non-slip",
       "options": {
         "type": "checkbox"
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0506",
       "question": "The footpath is well drained.",
       "options": {
         "type": "checkbox"
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0507",
@@ -215,7 +239,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0508",
@@ -224,7 +249,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0509",
@@ -233,7 +259,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0510",
@@ -242,7 +269,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0511",
@@ -251,7 +279,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0512",
@@ -260,7 +289,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0513",
@@ -269,7 +299,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0514",
@@ -278,7 +309,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.066
     },
     {
       "id": "0515",
@@ -287,7 +319,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.066
     }
   ],
   "Comfortable Environment": [
@@ -298,7 +331,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.09
     },
     {
       "id": "0602",
@@ -307,7 +341,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.09
     },
     {
       "id": "0603",
@@ -316,7 +351,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.09
     },
     {
       "id": "0604",
@@ -325,7 +361,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.09
     },
     {
       "id": "0605",
@@ -334,7 +371,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.09
     },
     {
       "id": "0606",
@@ -343,7 +381,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.09
     },
     {
       "id": "0607",
@@ -352,7 +391,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.09
     },
     {
       "id": "0608",
@@ -361,7 +401,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.09
     },
     {
       "id": "0609",
@@ -370,7 +411,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.09
     },
     {
       "id": "0610",
@@ -379,7 +421,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.09
     },
     {
       "id": "0611",
@@ -388,8 +431,8 @@
         "type": "slider",
         "min": 0,
         "max": 4
-      }
+      },
+      "weighting": 0.09
     }
   ]
 }
-
