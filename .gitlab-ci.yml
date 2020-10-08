@@ -81,6 +81,6 @@ build appbundle release:
     - master
     - tags
 
-prepare release:
-  stage: release
-  script:
+# prepare release:
+#  stage: release
+#  script:
