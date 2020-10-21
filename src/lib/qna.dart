@@ -5,50 +5,87 @@ import 'package:flutter/services.dart' show rootBundle;
 
 import 'survey.dart';
 
+enum LocationType {
+  INTERSECTION,
+  SEGMENT
+}
+
 class Services {
+  static String filename = "assets/questions.json";
+
   static Future<String> _loadAQuestionAsset() async {
-    return await rootBundle.loadString('assets/segment_questions.json');
+    return await rootBundle.loadString(filename);
   }
 
   static Future<List<QuestionCollection>> loadQuestion() async {
+    // Initialise Variables
     List<QuestionCollection> collections = List<QuestionCollection>();
     String title;
     String question;
-    double weighting;
     String type;
-    int min;
-    int max;
 
+    // Add intersection/segment question
+    List<StatefulWidget> locationSection = List<StatefulWidget>();
+    Title locationTitle = Title(title: "Location Type");
+    RadioQuestion locationQuestion = RadioQuestion(text: "Is the audited location a road segment or an intersection?", options: ["Segment", "Intersection"], multipleAnswers: false);
+    locationSection.add(locationTitle);
+    locationSection.add(locationQuestion);
+    QuestionCollection collection = QuestionCollection(title: "Location Type", contents: locationSection);
+    collections.add(collection);
+
+    // Load in JSON data
     String jsonString = await _loadAQuestionAsset();
     final questionData = json.decode(jsonString);
 
+    // Create sections with questions
     for (var data in questionData.entries) {
+      // Create contents
       List<StatefulWidget> contents = List<StatefulWidget>();
 
-      // Get title and total elements found
+      // Get title, questions and question length
       title = data.key.toString();
-      int length = data.value.length;
+      var questions = data.value[LocationType.SEGMENT.index];
+      int length = questions.length;
 
       // Add section title
       Title sectionTitle = Title(title: title);
       contents.add(sectionTitle);
 
+      // Create sections
       for (int i = 0; i < length; i++) {
         // Get question and its type
-        question = data.value[i]['question'].toString();
-        type = data.value[i]['options']['type'].toString();
-        weighting = data.value[i]['weighting'];
-        print("Weighting: " + weighting.toString());
+        question = questions[i]['question'].toString();
+        type = questions[i]['parameters']['type'].toString();
 
-        if (type == "slider") {
-          min = data.value[i]['options']['min'];
-          max = data.value[i]['options']['max'];
+        switch (type) {
+          case "slider": {
+              List options = questions[i]['parameters']['options'];
+              SliderQuestion slider = SliderQuestion(text: question, contents: options);
+              contents.add(slider);
+            }
+            break;
+            case "checkbox": {
+              CheckboxQuestion checkbox = CheckboxQuestion(text: question);
+              contents.add(checkbox);
+            }
+            break;
+            case "radio": {
+              List options = questions[i]['parameters']['options'];
+              bool multipleAnswers = (questions[i]['parameters']['multiple_answers'].toLowerCase() == "true");
 
-          SliderQuestion slider = SliderQuestion(min: min, max: max, text: question);
-          contents.add(slider);
-        } else {
-          CheckboxQuestion checkbox = CheckboxQuestion(text: question);
-          contents.add(checkbox);
+              RadioQuestion radio = RadioQuestion(options: options, multipleAnswers: multipleAnswers, text: question);
+              contents.add(radio);
+            }
+            break;
+            case "dropdown": {
+              List options = questions[i]['parameters']['options'];
+              DropDownQuestion dropdown = DropDownQuestion(title: question, options: options);
+              contents.add(dropdown);
+            }
+            break;
+            default:
+              debugPrint("Error: No question of type " + type + " is currently implemented!");
+            break;
         }
       }
 
@@ -63,16 +100,25 @@ class Services {
 
     return collections;
   }
+
   static Future<List<Section>> loadSections(PageController _controller) async {
+    // Initialise section variables
     List<Section> sections = List<Section>();
     String title;
 
+    // Load in JSON data
     String jsonString = await _loadAQuestionAsset();
     final questionData = json.decode(jsonString);
 
+    // Add Sections Header
     sections.add(new Section(title: "Header"));
 
-    int i = 0;
+    // Add Location Section
+    Section locationSection = new Section(title: "Location Type", page: 0);
+    locationSection.setController(_controller);
+    sections.add(locationSection);
+
+    int i = 1;
     for (var data in questionData.entries) {
       // Get title
       title = data.key.toString();
@@ -88,32 +134,39 @@ class Services {
     return sections;
   }
   static Future<List<DetailedReportSection>> loadDetailedReport(String _address) async {
+    // Initialise variables
     List<DetailedReportSection> sections = List<DetailedReportSection>();
     String title;
     String question;
+    int sectionNum = 0;
 
+    // Load in JSON data
     String jsonString = await _loadAQuestionAsset();
     final questionData = json.decode(jsonString);
 
-    int sectionNum = 1;
+    // Add Location Text Link
+    List<StatefulWidget> locationContents = List<StatefulWidget>();
+    TextLink locationLink = new TextLink(section: sectionNum++, questionNumber: 1, questionText: "Is the audited location an intersection or a road segment?", result: 0, address: _address);
+    locationContents.add(locationLink);
+    DetailedReportSection locationSection = DetailedReportSection(title: "Location Type", contents: locationContents);
+    sections.add(locationSection);
+
+    // Load in detailed report
     for (var data in questionData.entries) {
       List<StatefulWidget> contents = List<StatefulWidget>();
 
       // Get title and total elements found
       title = data.key.toString();
-      int length = data.value.length;
-
-      print(sectionNum.toString() + ". " + title);
+      var questions = data.value[LocationType.INTERSECTION.index];
+      int length = questions.length;
 
       for (int i = 0; i < length; i++) {
         // Get question and its type
-        question = data.value[i]['question'].toString();
+        question = questions[i]['question'].toString();
 
+        // Create Text Link and add to contents
         TextLink link = new TextLink(section: sectionNum, questionNumber: i + 1, questionText: question, result: 1, address: _address);
-
         contents.add(link);
-
-        print(sectionNum.toString() + "." + i.toString() + ". " + question);
       }
 
       // Increment section number
@@ -265,18 +318,17 @@ class _QuestionState extends State<Question> {
 
 // Slider Question
 class SliderQuestion extends StatefulWidget {
-  final int min;
-  final int max;
   final String text;
+  final List contents;
 
-  SliderQuestion({Key key, this.min, this.max, this.text}) : super(key: key);
+  SliderQuestion({Key key, this.text, this.contents}) : super(key: key);
 
   @override
   _SliderQuestionState createState() => _SliderQuestionState();
 }
 class _SliderQuestionState extends State<SliderQuestion> {
   double _sliderVal = 0;
-  String _hintLabel = "Not at all";
+  String _hintLabel;
 
   @override
   Widget build(BuildContext ctx) {
@@ -284,39 +336,15 @@ class _SliderQuestionState extends State<SliderQuestion> {
       Question(text: widget.text),
       Slider(
         value: _sliderVal,
-        min: widget.min.toDouble(),
-        max: widget.max.toDouble(),
-        divisions: widget.max,
+        min: 0,
+        max: (widget.contents.length - 1).toDouble(),
+        divisions: widget.contents.length - 1,
         label: _hintLabel,
         onChanged: (value) {
           setState(() {
-            switch (value.toInt()) {
-              case 0:
-                print("NEW VAL: $value");
-                _sliderVal = value;
-                _hintLabel = "Not at all";
-                break;
-              case 1:
-                print("NEW VAL: $value");
-                _sliderVal = value;
-                _hintLabel = "Rarely";
-                break;
-              case 2:
-                print("NEW VAL: $value");
-                _sliderVal = value;
-                _hintLabel = "Occasionally";
-                break;
-              case 3:
-                print("NEW VAL: $value");
-                _sliderVal = value;
-                _hintLabel = "Frequently";
-                break;
-              case 4:
-                print("NEW VAL: $value");
-                _sliderVal = value;
-                _hintLabel = "Very Frequently";
-                break;
-            }
+            print("NEW VAL: $value");
+            _sliderVal = value;
+            _hintLabel = widget.contents[value.toInt()];
           });
         },
       )
@@ -348,6 +376,101 @@ class _CheckboxQuestionState extends State<CheckboxQuestion> {
         },
       ),
     ]);
+  }
+}
+
+// Radio Question
+class RadioQuestion extends StatefulWidget {
+  final String text;
+  final List options;
+  final bool multipleAnswers;
+
+  RadioQuestion({Key key, this.text, this.options, this.multipleAnswers}) : super(key: key);
+
+  @override
+  _RadioQuestionState createState() => _RadioQuestionState();
+}
+class _RadioQuestionState extends State<RadioQuestion> {
+  String _selected;
+
+  @override
+  Widget build(BuildContext ctx) {
+    List<Widget> widgetsList = [];
+
+    // Add question widget
+    widgetsList.add(Question(text: widget.text));
+
+    // Create Radio Button Options
+    for (String option in widget.options) {
+      RadioListTile<String> tile = RadioListTile<String>(
+        title: Text(option),
+        value: option,
+        groupValue: _selected,
+        onChanged: (String value) {
+          setState(() {
+            print("NEW VAL: " + value);
+            _selected = value;
+          });
+        },
+      );
+
+      widgetsList.add(tile);
+    }
+
+    return Column(
+        children: widgetsList
+    );
+  }
+}
+
+class DropDownQuestion extends StatefulWidget {
+  final String title;
+  final List options;
+
+  DropDownQuestion({Key key, this.title, this.options}) : super(key: key);
+
+  @override
+  _DropDownQuestionState createState() => _DropDownQuestionState();
+}
+
+class _DropDownQuestionState extends State<DropDownQuestion> {
+  String _value;
+
+  @override
+  Widget build(BuildContext context) {
+    // Create list options
+    List<Widget> widgetsList = [];
+    List<DropdownMenuItem<String>> optionsList = [];
+
+    // Add Title to list
+    widgetsList.add(Text(widget.title));
+
+    // Create drop down list options
+    for (String option in widget.options) {
+      DropdownMenuItem<String> item = DropdownMenuItem<String>(
+        child: Text(option),
+        value: option,
+      );
+
+      optionsList.add(item);
+    }
+
+    // Create Drop Down Button
+    DropdownButton button = new DropdownButton(
+        hint: Text("Select Item"),
+        value: _value,
+        items: optionsList,
+        onChanged: (value) {
+          setState(() {
+            _value = value;
+          });
+        }
+    );
+    widgetsList.add(button);
+
+    return Column(
+      children: widgetsList
+    );
   }
 }
 
