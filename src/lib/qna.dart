@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'survey.dart';
+import 'request_handler.dart';
 
 enum LocationType {
   INTERSECTION,
@@ -183,6 +184,7 @@ class Services {
 
 class QuestionCollection extends StatefulWidget {
   final String title;
+  final Map<String, dynamic> data;
   final List<StatefulWidget> contents;
 
   QuestionCollection({Key key, this.title, this.contents}) : super(key: key);
@@ -192,21 +194,27 @@ class QuestionCollection extends StatefulWidget {
 }
 
 class _QuestionCollectionState extends State<QuestionCollection> {
+
+  // JG: callback for storing response data
+  void updateData(String key, dynamic val) {
+    widget.data[key] = val;
+  }
+
   @override
   Widget build(BuildContext ctx) {
     ListView view = ListView(
       padding: EdgeInsets.all(16.0),
       children: <Widget>[
         DefaultTextStyle(
-            style: Theme.of(context).textTheme.bodyText2,
-            textAlign: TextAlign.center,
-            textWidthBasis: TextWidthBasis.parent,
-            child: Center(
-              widthFactor: 100,
-              child: Column(
-                children: widget.contents,
-              ),
-            ))
+          style: Theme.of(context).textTheme.bodyText2,
+          textAlign: TextAlign.center,
+          textWidthBasis: TextWidthBasis.parent,
+          child: Center(
+            widthFactor: 100,
+            child: Column(
+              children: widget.contents,
+            ),
+          ))
       ],
     );
     return view;
@@ -227,20 +235,20 @@ class _TitleState extends State<Title> {
   @override
   Widget build(BuildContext ctx) {
     return Container(
-        child:
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-              Text("\n" + widget.title + " ", style: TextStyle(color: Colors.blue, fontSize: 24, fontWeight: FontWeight.bold)),
-              InkWell(
-                  child: new Text("?", style: TextStyle(color: Colors.blue, fontSize: 18, decoration: TextDecoration.underline)),
-                  onTap: () {
-                    showDialog(context: ctx,
-                        builder: (ctx) => new AlertDialog(
-                          title: Text(widget.title),
-                          content: Text("Hello There!"),
-                        )
-                    );
-                  })
-            ])
+      child:
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+          Text("\n" + widget.title + " ", style: TextStyle(color: Colors.blue, fontSize: 24, fontWeight: FontWeight.bold)),
+          InkWell(
+            child: new Text("?", style: TextStyle(color: Colors.blue, fontSize: 18, decoration: TextDecoration.underline)),
+            onTap: () {
+              showDialog(context: ctx,
+                builder: (ctx) => new AlertDialog(
+                  title: Text(widget.title),
+                  content: Text("Hello There!"),
+                )
+              );
+            })
+        ])
     );
   }
 }
@@ -318,10 +326,12 @@ class _QuestionState extends State<Question> {
 
 // Slider Question
 class SliderQuestion extends StatefulWidget {
+  final String id;
   final String text;
   final List contents;
+  final void Function(String id, dynamic data) _updateData;
 
-  SliderQuestion({Key key, this.text, this.contents}) : super(key: key);
+  SliderQuestion({Key key, this.id, this.text, this.contents, this.updateData}) : super(key: key);
 
   @override
   _SliderQuestionState createState() => _SliderQuestionState();
@@ -345,6 +355,7 @@ class _SliderQuestionState extends State<SliderQuestion> {
             print("NEW VAL: $value");
             _sliderVal = value;
             _hintLabel = widget.contents[value.toInt()];
+            _updateData(widget.id, _sliderVal);
           });
         },
       )
@@ -354,24 +365,32 @@ class _SliderQuestionState extends State<SliderQuestion> {
 
 // Checkbox Question
 class CheckboxQuestion extends StatefulWidget {
+  final String id;
   final String text;
+  final void Function(String id, dynamic data) _updateData;
 
-  CheckboxQuestion({Key key, this.text}) : super(key: key);
+  CheckboxQuestion({Key key, this.id, this.text, this._updateData}) : super(key: key);
 
   @override
   _CheckboxQuestionState createState() => _CheckboxQuestionState();
 }
 class _CheckboxQuestionState extends State<CheckboxQuestion> {
-  bool yesVal = false;
+  bool _yesVal = false;
+  
+  String getData() {
+    return _yesVal.toString();
+  }
+  
   @override
   Widget build(BuildContext ctx) {
     return Column(children: <Widget>[
       CheckboxListTile(
         title: Text(widget.text),
-        value: yesVal,
+        value: _yesVal,
         onChanged: (bool value) {
           setState(() {
-            yesVal = value;
+            _yesVal = value;
+            widget._updateData(widget.id, _yesVal);
           });
         },
       ),
@@ -381,17 +400,23 @@ class _CheckboxQuestionState extends State<CheckboxQuestion> {
 
 // Radio Question
 class RadioQuestion extends StatefulWidget {
+  final String id;
   final String text;
   final List options;
   final bool multipleAnswers;
+  final void Function(String id, dynamic data) _updateData;
 
-  RadioQuestion({Key key, this.text, this.options, this.multipleAnswers}) : super(key: key);
+  RadioQuestion({Key key, this.id, this.text, this.options, this.multipleAnswers, this._updateData}) : super(key: key);
 
   @override
   _RadioQuestionState createState() => _RadioQuestionState();
 }
 class _RadioQuestionState extends State<RadioQuestion> {
   String _selected;
+  
+  String getData() {
+    return _selected.toString();
+  }
 
   @override
   Widget build(BuildContext ctx) {
@@ -410,6 +435,7 @@ class _RadioQuestionState extends State<RadioQuestion> {
           setState(() {
             print("NEW VAL: " + value);
             _selected = value;
+            widget._updateData(widget.id, _selected);
           });
         },
       );
@@ -424,10 +450,12 @@ class _RadioQuestionState extends State<RadioQuestion> {
 }
 
 class DropDownQuestion extends StatefulWidget {
+  final String id;
   final String title;
   final List options;
+  final void Function(String id, dynamic data) _updateData;
 
-  DropDownQuestion({Key key, this.title, this.options}) : super(key: key);
+  DropDownQuestion({Key key, this.id, this.title, this.options, this._updateData}) : super(key: key);
 
   @override
   _DropDownQuestionState createState() => _DropDownQuestionState();
@@ -435,6 +463,10 @@ class DropDownQuestion extends StatefulWidget {
 
 class _DropDownQuestionState extends State<DropDownQuestion> {
   String _value;
+
+  String getData() {
+    return _value.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -463,6 +495,7 @@ class _DropDownQuestionState extends State<DropDownQuestion> {
         onChanged: (value) {
           setState(() {
             _value = value;
+            widget._updateData(this.id, _value);
           });
         }
     );
