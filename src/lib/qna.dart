@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'survey.dart';
 
 class Services {
-  static String filename = "assets/questions.json";
   static String auditJson;
 
   static Future<String> _fetchAQuestion(String auditType) async {
@@ -27,9 +26,11 @@ class Services {
   static Future<List<QuestionCollection>> loadQuestion(String auditType) async {
     // Initialise Variables
     List<QuestionCollection> collections = List<QuestionCollection>();
+    String id;
     String title;
     String question;
     String type;
+    double weighting;
 
     // Load in JSON data
     if (auditJson == null) {
@@ -55,19 +56,22 @@ class Services {
 
       // Create sections
       for (int i = 0; i < length; i++) {
-        // Get question and its type
+        // Get question and its types, as well as weights
+        id = questions[i]['id'].toString();
+        debugPrint(id);
         question = questions[i]['question'].toString();
         type = questions[i]['parameters']['type'].toString();
-
+        weighting = double.parse(questions[i]['weighting']);
+        //debugPrint(questions[i]['weighting'].toString());
         switch (type) {
           case "slider": {
               List options = questions[i]['parameters']['options'];
-              SliderQuestion slider = SliderQuestion(text: question, contents: options);
+              SliderQuestion slider = SliderQuestion(id: id, text: question, contents: options, weight: weighting);
               contents.add(slider);
             }
             break;
             case "checkbox": {
-              CheckboxQuestion checkbox = CheckboxQuestion(text: question);
+              CheckboxQuestion checkbox = CheckboxQuestion(id: id, text: question, weight: weighting);
               contents.add(checkbox);
             }
             break;
@@ -75,13 +79,13 @@ class Services {
               List options = questions[i]['parameters']['options'];
               bool multipleAnswers = (questions[i]['parameters']['multiple_answers'].toLowerCase() == "true");
 
-              RadioQuestion radio = RadioQuestion(options: options, multipleAnswers: multipleAnswers, text: question);
+              RadioQuestion radio = RadioQuestion(id: id, options: options, multipleAnswers: multipleAnswers, text: question, weight: weighting);
               contents.add(radio);
             }
             break;
             case "dropdown": {
               List options = questions[i]['parameters']['options'];
-              DropDownQuestion dropdown = DropDownQuestion(title: question, options: options);
+              DropDownQuestion dropdown = DropDownQuestion(id: id, title: question, options: options, weight: weighting);
               contents.add(dropdown);
             }
             break;
@@ -290,7 +294,6 @@ class _SectionState extends State<Section> {
 // Question
 class Question extends StatefulWidget {
   final String text;
-  // final double weight;
 
   Question({Key key, this.text}) : super(key: key);
 
@@ -306,10 +309,12 @@ class _QuestionState extends State<Question> {
 
 // Slider Question
 class SliderQuestion extends StatefulWidget {
+  final String id;
   final String text;
   final List contents;
+  final double weight;
 
-  SliderQuestion({Key key, this.text, this.contents}) : super(key: key);
+  SliderQuestion({Key key, this.id, this.text, this.contents, this.weight}) : super(key: key);
 
   @override
   _SliderQuestionState createState() => _SliderQuestionState();
@@ -317,7 +322,6 @@ class SliderQuestion extends StatefulWidget {
 class _SliderQuestionState extends State<SliderQuestion> {
   double _sliderVal = 0;
   String _hintLabel;
-
   @override
   Widget build(BuildContext ctx) {
     return Column(children: <Widget>[
@@ -342,9 +346,11 @@ class _SliderQuestionState extends State<SliderQuestion> {
 
 // Checkbox Question
 class CheckboxQuestion extends StatefulWidget {
+  final String id;
   final String text;
+  final double weight;
 
-  CheckboxQuestion({Key key, this.text}) : super(key: key);
+  CheckboxQuestion({Key key, this.id , this.text, this.weight}) : super(key: key);
 
   @override
   _CheckboxQuestionState createState() => _CheckboxQuestionState();
@@ -369,11 +375,13 @@ class _CheckboxQuestionState extends State<CheckboxQuestion> {
 
 // Radio Question
 class RadioQuestion extends StatefulWidget {
+  final String id;
   final String text;
   final List options;
   final bool multipleAnswers;
+  final double weight;
 
-  RadioQuestion({Key key, this.text, this.options, this.multipleAnswers}) : super(key: key);
+  RadioQuestion({Key key,this.id, this.text, this.options, this.multipleAnswers, this.weight}) : super(key: key);
 
   @override
   _RadioQuestionState createState() => _RadioQuestionState();
@@ -416,10 +424,12 @@ class _RadioQuestionState extends State<RadioQuestion> {
 }
 
 class DropDownQuestion extends StatefulWidget {
+  final String id;
   final String title;
   final List options;
+  final double weight;
 
-  DropDownQuestion({Key key, this.title, this.options}) : super(key: key);
+  DropDownQuestion({Key key, this.id, this.title, this.options, this.weight}) : super(key: key);
 
   @override
   _DropDownQuestionState createState() => _DropDownQuestionState();
