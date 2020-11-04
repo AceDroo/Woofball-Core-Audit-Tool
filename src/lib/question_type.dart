@@ -75,12 +75,18 @@ class _QuestionTypePageState extends State<QuestionTypePage> {
             FloatingActionButton(
                 heroTag: 'nextFAB',
                 onPressed: () {
-                  Navigator.pop(context); // Closes drawer
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                      builder: (context) => Survey(auditType: _selected, address: widget.address, page: 0, editMode: false), // Go to initial survey page
-                  ));
+                  if (_selected != "") {
+                    Navigator.pop(context); // Closes drawer
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              Survey(auditType: _selected,
+                                  address: widget.address,
+                                  page: 0,
+                                  editMode: false), // Go to initial survey page
+                        ));
+                  }
                 },
                 child: Icon(Icons.navigate_next),
               ),
