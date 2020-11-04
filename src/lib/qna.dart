@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async' show Future;
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
-
+import 'package:http/http.dart' as http;
 import 'survey.dart';
 
 enum LocationType {
@@ -13,9 +12,21 @@ enum LocationType {
 class Services {
   static String filename = "assets/questions.json";
 
-  static Future<String> _loadAQuestionAsset() async {
-    return await rootBundle.loadString(filename);
+  static Future<String> _fetchAQuestion(String auditType) async{
+    final String apiUrl = "https://z5vplyleb9.execute-api.ap-southeast-2.amazonaws.com/release/getQuestions";
+    final String apiToken = "2T8hefWnH0XikA3yJLYAkQ";
+
+    final response = await http.post(apiUrl, body: json.encode({
+      "token": apiToken,
+      "auditType": auditType
+    }));
+    debugPrint(response.toString());
+    if (200 == response.statusCode) {
+      debugPrint("Questions successfully loaded.");
+    }
+    return response.body.toString();
   }
+
 
   static Future<List<QuestionCollection>> loadQuestion() async {
     // Initialise Variables
@@ -34,17 +45,20 @@ class Services {
     collections.add(collection);
 
     // Load in JSON data
-    String jsonString = await _loadAQuestionAsset();
-    final questionData = json.decode(jsonString);
+    String test = "Intersection";
+
+    String jsonString = await _fetchAQuestion(test);
+    final responseData = json.decode(jsonString);
+    final questionData = responseData["body"]["questionsList"];
 
     // Create sections with questions
-    for (var data in questionData.entries) {
+    for (var data in questionData) {
       // Create contents
       List<StatefulWidget> contents = List<StatefulWidget>();
 
       // Get title, questions and question length
-      title = data.key.toString();
-      var questions = data.value[LocationType.SEGMENT.index];
+      title = data["category"];
+      var questions = data["questions"];
       int length = questions.length;
 
       // Add section title
@@ -107,8 +121,9 @@ class Services {
     String title;
 
     // Load in JSON data
-    String jsonString = await _loadAQuestionAsset();
-    final questionData = json.decode(jsonString);
+    String jsonString = await  _fetchAQuestion("Intersection");
+    final responseData = json.decode(jsonString);
+    final questionData = responseData["body"]["questionsList"];
 
     // Add Sections Header
     sections.add(new Section(title: "Header"));
@@ -119,9 +134,9 @@ class Services {
     sections.add(locationSection);
 
     int i = 1;
-    for (var data in questionData.entries) {
+    for (var data in questionData) {
       // Get title
-      title = data.key.toString();
+      title = data["category"];
 
       // Create section and add it to list
       Section section = Section(title: title, page: i);
@@ -141,8 +156,9 @@ class Services {
     int sectionNum = 0;
 
     // Load in JSON data
-    String jsonString = await _loadAQuestionAsset();
-    final questionData = json.decode(jsonString);
+    String jsonString = await _fetchAQuestion("Intersection");
+    final responseData = json.decode(jsonString);
+    final questionData = responseData["body"]["questionsList"];
 
     // Add Location Text Link
     List<StatefulWidget> locationContents = List<StatefulWidget>();
@@ -152,12 +168,12 @@ class Services {
     sections.add(locationSection);
 
     // Load in detailed report
-    for (var data in questionData.entries) {
+    for (var data in questionData) {
       List<StatefulWidget> contents = List<StatefulWidget>();
 
       // Get title and total elements found
-      title = data.key.toString();
-      var questions = data.value[LocationType.INTERSECTION.index];
+      title = data["category"];
+      var questions = data["questions"];
       int length = questions.length;
 
       for (int i = 0; i < length; i++) {
@@ -420,6 +436,10 @@ class _RadioQuestionState extends State<RadioQuestion> {
     return Column(
         children: widgetsList
     );
+  }
+
+  String getSelected() {
+    return _selected;
   }
 }
 
