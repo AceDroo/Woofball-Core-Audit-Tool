@@ -56,13 +56,11 @@ class Services {
 
       // Create sections
       for (int i = 0; i < length; i++) {
-        // Get question and its types, as well as weights
+        // Get question and its types, as well as weights and id
         id = questions[i]['id'].toString();
-        debugPrint(id);
         question = questions[i]['question'].toString();
         type = questions[i]['parameters']['type'].toString();
         weighting = double.parse(questions[i]['weighting']);
-        //debugPrint(questions[i]['weighting'].toString());
         switch (type) {
           case "slider": {
               List options = questions[i]['parameters']['options'];
