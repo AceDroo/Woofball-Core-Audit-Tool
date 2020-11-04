@@ -184,7 +184,7 @@ class Services {
 
 class QuestionCollection extends StatefulWidget {
   final String title;
-  final Map<String, dynamic> data;
+  final Map<String, dynamic> data = {};
   final List<StatefulWidget> contents;
 
   QuestionCollection({Key key, this.title, this.contents}) : super(key: key);
@@ -198,6 +198,10 @@ class _QuestionCollectionState extends State<QuestionCollection> {
   // JG: callback for storing response data
   void updateData(String key, dynamic val) {
     widget.data[key] = val;
+  }
+
+  Map<String, dynamic> getData() {
+    return widget.data;
   }
 
   @override
@@ -329,7 +333,7 @@ class SliderQuestion extends StatefulWidget {
   final String id;
   final String text;
   final List contents;
-  final void Function(String id, dynamic data) _updateData;
+  final void Function(String id, dynamic data) updateData;
 
   SliderQuestion({Key key, this.id, this.text, this.contents, this.updateData}) : super(key: key);
 
@@ -355,7 +359,7 @@ class _SliderQuestionState extends State<SliderQuestion> {
             print("NEW VAL: $value");
             _sliderVal = value;
             _hintLabel = widget.contents[value.toInt()];
-            _updateData(widget.id, _sliderVal);
+            widget.updateData(widget.id, _sliderVal);
           });
         },
       )
@@ -367,9 +371,9 @@ class _SliderQuestionState extends State<SliderQuestion> {
 class CheckboxQuestion extends StatefulWidget {
   final String id;
   final String text;
-  final void Function(String id, dynamic data) _updateData;
+  final void Function(String id, dynamic data) updateData;
 
-  CheckboxQuestion({Key key, this.id, this.text, this._updateData}) : super(key: key);
+  CheckboxQuestion({Key key, this.id, this.text, this.updateData}) : super(key: key);
 
   @override
   _CheckboxQuestionState createState() => _CheckboxQuestionState();
@@ -390,7 +394,7 @@ class _CheckboxQuestionState extends State<CheckboxQuestion> {
         onChanged: (bool value) {
           setState(() {
             _yesVal = value;
-            widget._updateData(widget.id, _yesVal);
+            widget.updateData(widget.id, _yesVal);
           });
         },
       ),
@@ -404,9 +408,9 @@ class RadioQuestion extends StatefulWidget {
   final String text;
   final List options;
   final bool multipleAnswers;
-  final void Function(String id, dynamic data) _updateData;
+  final void Function(String id, dynamic data) updateData;
 
-  RadioQuestion({Key key, this.id, this.text, this.options, this.multipleAnswers, this._updateData}) : super(key: key);
+  RadioQuestion({Key key, this.id, this.text, this.options, this.multipleAnswers, this.updateData}) : super(key: key);
 
   @override
   _RadioQuestionState createState() => _RadioQuestionState();
@@ -435,7 +439,7 @@ class _RadioQuestionState extends State<RadioQuestion> {
           setState(() {
             print("NEW VAL: " + value);
             _selected = value;
-            widget._updateData(widget.id, _selected);
+            widget.updateData(widget.id, _selected);
           });
         },
       );
@@ -453,9 +457,9 @@ class DropDownQuestion extends StatefulWidget {
   final String id;
   final String title;
   final List options;
-  final void Function(String id, dynamic data) _updateData;
+  final void Function(String id, dynamic data) updateData;
 
-  DropDownQuestion({Key key, this.id, this.title, this.options, this._updateData}) : super(key: key);
+  DropDownQuestion({Key key, this.id, this.title, this.options, this.updateData}) : super(key: key);
 
   @override
   _DropDownQuestionState createState() => _DropDownQuestionState();
@@ -495,7 +499,7 @@ class _DropDownQuestionState extends State<DropDownQuestion> {
         onChanged: (value) {
           setState(() {
             _value = value;
-            widget._updateData(this.id, _value);
+            widget.updateData(widget.id, _value);
           });
         }
     );

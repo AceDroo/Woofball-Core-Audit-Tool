@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'qna.dart';
 import 'results.dart';
+import 'request_handler.dart';
 
 class Survey extends StatefulWidget {
   final String address;
@@ -85,6 +86,8 @@ class _SurveyState extends State<Survey> {
   Widget getQuestionPages() {
     return FutureBuilder<List<QuestionCollection>>(
         future: Services.loadQuestion(),
+        // JG: obtain a snapshot in the form of  alist of question collections
+        // granted that the data is available from the future
         builder: (BuildContext ctx, AsyncSnapshot<List<QuestionCollection>> snapshot) {
           if (snapshot.hasData) {
             // Successfully loaded questions
@@ -170,6 +173,7 @@ class _SurveyState extends State<Survey> {
                   Navigator.push(
                       context, MaterialPageRoute(builder: (context) => Results(widget.address)));
                   print("Reached end of survey!");
+                  print(questions);
                 },
                 child: Icon(Icons.done),
               )
