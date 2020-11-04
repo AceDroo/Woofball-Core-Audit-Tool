@@ -8,6 +8,11 @@ import 'request_handler.dart';
 class Services {
   static String filename = "assets/questions.json";
   static String auditJson;
+  static Map<String, dynamic> outputData = {};
+
+  static void updateData(String key, dynamic val) {
+    outputData[key] = val;
+  }
 
   static Future<String> _fetchAQuestion(String auditType) async {
     final String apiUrl = "https://z5vplyleb9.execute-api.ap-southeast-2.amazonaws.com/release/getQuestions";
@@ -63,12 +68,12 @@ class Services {
         switch (type) {
           case "slider": {
               List options = questions[i]['parameters']['options'];
-              SliderQuestion slider = SliderQuestion(text: question, contents: options);
+              SliderQuestion slider = SliderQuestion(text: question, contents: options, updateData: updateData);
               contents.add(slider);
             }
             break;
             case "checkbox": {
-              CheckboxQuestion checkbox = CheckboxQuestion(text: question);
+              CheckboxQuestion checkbox = CheckboxQuestion(text: question, updateData: updateData);
               contents.add(checkbox);
             }
             break;
@@ -76,13 +81,13 @@ class Services {
               List options = questions[i]['parameters']['options'];
               bool multipleAnswers = (questions[i]['parameters']['multiple_answers'].toLowerCase() == "true");
 
-              RadioQuestion radio = RadioQuestion(options: options, multipleAnswers: multipleAnswers, text: question);
+              RadioQuestion radio = RadioQuestion(options: options, multipleAnswers: multipleAnswers, text: question, updateData: updateData);
               contents.add(radio);
             }
             break;
             case "dropdown": {
               List options = questions[i]['parameters']['options'];
-              DropDownQuestion dropdown = DropDownQuestion(title: question, options: options);
+              DropDownQuestion dropdown = DropDownQuestion(title: question, options: options, updateData: updateData);
               contents.add(dropdown);
             }
             break;
@@ -192,15 +197,6 @@ class QuestionCollection extends StatefulWidget {
 }
 
 class _QuestionCollectionState extends State<QuestionCollection> {
-
-  // JG: callback for storing response data
-  void updateData(String key, dynamic val) {
-    widget.data[key] = val;
-  }
-
-  Map<String, dynamic> getData() {
-    return widget.data;
-  }
 
   @override
   Widget build(BuildContext ctx) {
@@ -347,7 +343,7 @@ class _SliderQuestionState extends State<SliderQuestion> {
             print("NEW VAL: $value");
             _sliderVal = value;
             _hintLabel = widget.contents[value.toInt()];
-            widget.updateData(widget.id, _sliderVal);
+            widget.updateData(widget.id, value);
           });
         },
       )
@@ -382,7 +378,7 @@ class _CheckboxQuestionState extends State<CheckboxQuestion> {
         onChanged: (bool value) {
           setState(() {
             _yesVal = value;
-            widget.updateData(widget.id, _yesVal);
+            widget.updateData(widget.id, value);
           });
         },
       ),
@@ -427,7 +423,7 @@ class _RadioQuestionState extends State<RadioQuestion> {
           setState(() {
             print("NEW VAL: " + value);
             _selected = value;
-            widget.updateData(widget.id, _selected);
+            widget.updateData(widget.id, value);
           });
         },
       );
@@ -491,7 +487,7 @@ class _DropDownQuestionState extends State<DropDownQuestion> {
         onChanged: (value) {
           setState(() {
             _value = value;
-            widget.updateData(widget.id, _value);
+            widget.updateData(widget.id, value);
           });
         }
     );
