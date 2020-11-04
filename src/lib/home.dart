@@ -8,7 +8,7 @@ import 'package:flutter/services.dart' show rootBundle;
 
 import 'search_bar.dart';
 import 'settings.dart';
-import 'survey.dart';
+import 'question_type.dart';
 
 class Home extends StatefulWidget {
   Home({Key key, this.title}) : super(key: key);
@@ -175,8 +175,45 @@ class _HomeState extends State<Home> {
               mapType: _currentMapType,
             ),
           ),
-          SearchBar(hintText: 'Wollongong, NSW 2560', callback: _updateCamera),
-        ],
+          SearchBar(hintText: 'Wollongong, NSW 2560', callback:_updateCamera),
+				],
+			),
+      drawer: Drawer(
+        child: ListView(
+          children: <Widget>[
+            ListTile(
+              title: Text('Login'),
+              onTap: () {
+                // Do something
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Settings(_updateMap),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              title: Text("Create Audit"),
+              onTap: () {
+                Navigator.pop(context); // Closes drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => QuestionTypePage(address: _addr), // Go to initial survey page
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomAppBar(
         child: new Row(
@@ -205,21 +242,20 @@ class _HomeState extends State<Home> {
             AnimatedOpacity(
               opacity: _showNewSurvey ? 1.0 : 0.0,
               duration: Duration(milliseconds: 500),
-              child: FloatingActionButton(
-                  heroTag: 'newSurvey',
-                  onPressed: () {
-                    if (_showNewSurvey)
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => Survey(
-                              address: _addr,
-                              page: 0,
-                              editMode: false), // Go to survey page
-                        ),
-                      );
-                  },
-                  child: Icon(Icons.add_circle)),
+              child:
+              FloatingActionButton(
+                heroTag: 'newSurvey',
+                onPressed: () {
+                  if (_showNewSurvey)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => QuestionTypePage(address: _addr), // Go to survey page
+                      ),
+                    );
+                },
+                child: Icon(Icons.add_circle)
+              ),
             ),
             SizedBox(height: 10),
             FloatingActionButton(

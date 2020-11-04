@@ -4,15 +4,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'survey.dart';
 
-enum LocationType {
-  INTERSECTION,
-  SEGMENT
-}
-
 class Services {
   static String filename = "assets/questions.json";
+  static String auditJson;
 
-  static Future<String> _fetchAQuestion(String auditType) async{
+  static Future<String> _fetchAQuestion(String auditType) async {
     final String apiUrl = "https://z5vplyleb9.execute-api.ap-southeast-2.amazonaws.com/release/getQuestions";
     final String apiToken = "2T8hefWnH0XikA3yJLYAkQ";
 
@@ -20,7 +16,7 @@ class Services {
       "token": apiToken,
       "auditType": auditType
     }));
-    debugPrint(response.toString());
+
     if (200 == response.statusCode) {
       debugPrint("Questions successfully loaded.");
     }
@@ -28,27 +24,19 @@ class Services {
   }
 
 
-  static Future<List<QuestionCollection>> loadQuestion() async {
+  static Future<List<QuestionCollection>> loadQuestion(String auditType) async {
     // Initialise Variables
     List<QuestionCollection> collections = List<QuestionCollection>();
     String title;
     String question;
     String type;
 
-    // Add intersection/segment question
-    List<StatefulWidget> locationSection = List<StatefulWidget>();
-    Title locationTitle = Title(title: "Location Type");
-    RadioQuestion locationQuestion = RadioQuestion(text: "Is the audited location a road segment or an intersection?", options: ["Segment", "Intersection"], multipleAnswers: false);
-    locationSection.add(locationTitle);
-    locationSection.add(locationQuestion);
-    QuestionCollection collection = QuestionCollection(title: "Location Type", contents: locationSection);
-    collections.add(collection);
-
     // Load in JSON data
-    String test = "Intersection";
+    if (auditJson == null) {
+      auditJson = await _fetchAQuestion(auditType);
+    }
 
-    String jsonString = await _fetchAQuestion(test);
-    final responseData = json.decode(jsonString);
+    final responseData = json.decode(auditJson);
     final questionData = responseData["body"]["questionsList"];
 
     // Create sections with questions
@@ -62,8 +50,8 @@ class Services {
       int length = questions.length;
 
       // Add section title
-      Title sectionTitle = Title(title: title);
-      contents.add(sectionTitle);
+      QuestionTitle sectionQuestionTitle = QuestionTitle(title: title);
+      contents.add(sectionQuestionTitle);
 
       // Create sections
       for (int i = 0; i < length; i++) {
@@ -115,25 +103,23 @@ class Services {
     return collections;
   }
 
-  static Future<List<Section>> loadSections(PageController _controller) async {
+  static Future<List<Section>> loadSections(String auditType, PageController _controller) async {
     // Initialise section variables
     List<Section> sections = List<Section>();
     String title;
 
     // Load in JSON data
-    String jsonString = await  _fetchAQuestion("Intersection");
-    final responseData = json.decode(jsonString);
+    if (auditJson == null) {
+      auditJson = await  _fetchAQuestion(auditType);
+    }
+
+    final responseData = json.decode(auditJson);
     final questionData = responseData["body"]["questionsList"];
 
     // Add Sections Header
     sections.add(new Section(title: "Header"));
 
-    // Add Location Section
-    Section locationSection = new Section(title: "Location Type", page: 0);
-    locationSection.setController(_controller);
-    sections.add(locationSection);
-
-    int i = 1;
+    int i = 0;
     for (var data in questionData) {
       // Get title
       title = data["category"];
@@ -148,7 +134,7 @@ class Services {
 
     return sections;
   }
-  static Future<List<DetailedReportSection>> loadDetailedReport(String _address) async {
+  static Future<List<DetailedReportSection>> loadDetailedReport(String auditType, String _address) async {
     // Initialise variables
     List<DetailedReportSection> sections = List<DetailedReportSection>();
     String title;
@@ -156,16 +142,12 @@ class Services {
     int sectionNum = 0;
 
     // Load in JSON data
-    String jsonString = await _fetchAQuestion("Intersection");
-    final responseData = json.decode(jsonString);
-    final questionData = responseData["body"]["questionsList"];
+    if (auditJson == null) {
+      auditJson = await _fetchAQuestion(auditType);
+    }
 
-    // Add Location Text Link
-    List<StatefulWidget> locationContents = List<StatefulWidget>();
-    TextLink locationLink = new TextLink(section: sectionNum++, questionNumber: 1, questionText: "Is the audited location an intersection or a road segment?", result: 0, address: _address);
-    locationContents.add(locationLink);
-    DetailedReportSection locationSection = DetailedReportSection(title: "Location Type", contents: locationContents);
-    sections.add(locationSection);
+    final responseData = json.decode(auditJson);
+    final questionData = responseData["body"]["questionsList"];
 
     // Load in detailed report
     for (var data in questionData) {
@@ -229,33 +211,23 @@ class _QuestionCollectionState extends State<QuestionCollection> {
   }
 }
 
-// Title
-class Title extends StatefulWidget {
+// QuestionTitle
+class QuestionTitle extends StatefulWidget {
   final String title;
 
-  Title({Key key, this.title}) : super(key: key);
+  QuestionTitle({Key key, this.title}) : super(key: key);
 
   @override
-  _TitleState createState() => _TitleState();
+  _QuestionTitleState createState() => _QuestionTitleState();
 }
 
-class _TitleState extends State<Title> {
+class _QuestionTitleState extends State<QuestionTitle> {
   @override
   Widget build(BuildContext ctx) {
     return Container(
         child:
             Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
               Text("\n" + widget.title + " ", style: TextStyle(color: Colors.blue, fontSize: 24, fontWeight: FontWeight.bold)),
-              InkWell(
-                  child: new Text("?", style: TextStyle(color: Colors.blue, fontSize: 18, decoration: TextDecoration.underline)),
-                  onTap: () {
-                    showDialog(context: ctx,
-                        builder: (ctx) => new AlertDialog(
-                          title: Text(widget.title),
-                          content: Text("Hello There!"),
-                        )
-                    );
-                  })
             ])
     );
   }
@@ -462,7 +434,7 @@ class _DropDownQuestionState extends State<DropDownQuestion> {
     List<Widget> widgetsList = [];
     List<DropdownMenuItem<String>> optionsList = [];
 
-    // Add Title to list
+    // Add QuestionTitle to list
     widgetsList.add(Text(widget.title));
 
     // Create drop down list options

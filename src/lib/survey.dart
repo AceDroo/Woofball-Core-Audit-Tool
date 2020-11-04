@@ -5,11 +5,12 @@ import 'qna.dart';
 import 'results.dart';
 
 class Survey extends StatefulWidget {
+  final String auditType;
   final String address;
   final int page;
   final bool editMode;
 
-  Survey({Key key, this.address, this.page, this.editMode}) : super(key: key);
+  Survey({Key key, this.auditType, this.address, this.page, this.editMode}) : super(key: key);
 
   _SurveyState createState() => _SurveyState();
 }
@@ -56,7 +57,7 @@ class _SurveyState extends State<Survey> {
 
   Widget getSections() {
     return FutureBuilder<List<Section>>(
-        future: Services.loadSections(_pageController),
+        future: Services.loadSections(widget.auditType, _pageController),
         builder: (BuildContext context, AsyncSnapshot<List<Section>> snapshot) {
           if (snapshot.hasData) {
             // Successfully loaded in sections
@@ -84,7 +85,7 @@ class _SurveyState extends State<Survey> {
 
   Widget getQuestionPages() {
     return FutureBuilder<List<QuestionCollection>>(
-        future: Services.loadQuestion(),
+        future: Services.loadQuestion(widget.auditType),
         builder: (BuildContext ctx, AsyncSnapshot<List<QuestionCollection>> snapshot) {
           if (snapshot.hasData) {
             // Successfully loaded questions
@@ -168,7 +169,7 @@ class _SurveyState extends State<Survey> {
                   _pageController.jumpToPage(0);
                   Navigator.pop(context);
                   Navigator.push(
-                      context, MaterialPageRoute(builder: (context) => Results(widget.address)));
+                      context, MaterialPageRoute(builder: (context) => Results(widget.auditType, widget.address)));
                   print("Reached end of survey!");
                 },
                 child: Icon(Icons.done),

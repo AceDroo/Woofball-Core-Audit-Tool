@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'home.dart';
 
 class Results extends StatefulWidget {
-  Results(this._addr, {Key key}) : super(key: key);
+  Results(this._auditType, this._addr, {Key key}) : super(key: key);
 
+  final String _auditType;
   final String _addr;
   final String _grade = "B";
   _ResultsState createState() => _ResultsState();
@@ -17,7 +18,7 @@ class _ResultsState extends State<Results> {
     List<Widget> reportData;
 
     return FutureBuilder(
-      future: Services.loadDetailedReport(widget._addr),
+      future: Services.loadDetailedReport(widget._auditType, widget._addr),
         builder: (BuildContext context, AsyncSnapshot<List<DetailedReportSection>> snapshot) {
           if (snapshot.hasData) {
             // Successfully loaded detailed report
