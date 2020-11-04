@@ -8,8 +8,11 @@ import 'request_handler.dart';
 class Services {
   static String filename = "assets/questions.json";
   static String auditJson;
+  // JG: where we store the map that will get sent to the API
   static Map<String, dynamic> outputData = {};
 
+  // JG: handy callback for our methods to use for updating the
+  // outputData map
   static void updateData(String key, dynamic val) {
     outputData[key] = val;
   }

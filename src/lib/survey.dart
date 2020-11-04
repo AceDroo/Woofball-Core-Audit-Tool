@@ -112,6 +112,7 @@ class _SurveyState extends State<Survey> {
           return PageView(
             children: pageChildren,
             controller: _pageController,
+            keepPage: true,
             onPageChanged: (page) {
               setState(() {
                 currentPage = page;
@@ -172,7 +173,7 @@ class _SurveyState extends State<Survey> {
                   Navigator.push(
                       context, MaterialPageRoute(builder: (context) => Results(widget.auditType, widget.address)));
                   print("Reached end of survey!");
-                  print(questions);
+                  print(Services.outputData);
                 },
                 child: Icon(Icons.done),
               )
