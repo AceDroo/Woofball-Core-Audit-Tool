@@ -3,10 +3,101 @@ import 'dart:async' show Future;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'survey.dart';
-import 'request_handler.dart';
+
+class DataHandler {
+  final Map<String, dynamic> _output = {};
+  List<QuestionCollection> survey = List<QuestionCollection>();
+  
+  // JG: API url and token
+  final String _apiURL = "https://z5vplyleb9.execute-api.ap-southeast-2.amazonaws.com/release/getQuestions";
+  final String _apiToken = "2T8hefWnH0XikA3yJLYAkQ";
+
+  Future<String> _fetchQuestions(String auditType) async {
+    var response = await http.post(_apiURL, body: json.encode({
+      "token": _apiToken,
+      "auditType": auditType
+    }));
+
+    if (200 != response.statusCode) {
+      throw("Unable to gather Questions from remote source: $_apiURL");
+    }
+    debugPrint("Received status code 200 from remote source: $_apiURL");
+    return response.body.toString();
+  }
+
+  // JG: Using the received json, we can build a survey
+  // out of our various question widgets defined in this library
+  Future<List<QuestionCollection>> buildSurvey(String auditType) async {
+    List<QuestionCollection> survey = <QuestionCollection>[];
+    String auditJson = await _fetchQuestions(auditType); 
+
+    // JG: building the questions and adding them to collections
+    List sections = json.decode(auditJson)["body"]["questionsList"];
+    for (var section in sections) {
+      List<dynamic> questions = section["questions"];
+      List<StatefulWidget> collectionContents = <StatefulWidget>[];
+      for (var question in questions) {
+        String id = question["id"];
+        String text = question["question"];
+        List<dynamic> options = question["parameters"]["options"];
+        print(options);
+        double weight = double.parse(question["weighting"]); 
+        switch(question["parameters"]["type"]) {
+          case "slider": {
+            collectionContents.add(SliderQuestion(
+                                    id: question["id"],
+                                    text: question["question"],
+                                    options: question["parameters"]["options"],
+                                    weight: double.parse(question["weighting"]),
+                                    callback: updateOutput
+            ));
+          }
+          break;
+          case "checkbox": {
+            collectionContents.add(CheckboxQuestion(
+                                    id: question["id"],
+                                    text: question["question"],
+                                    weight: double.parse(question["weighting"]),
+                                    callback: updateOutput
+            ));
+          }
+          break;
+          case "radio": {
+            collectionContents.add(RadioQuestion(
+                                    id: question["id"],
+                                    text: question["question"],
+                                    weight: double.parse(question["weighting"]),
+                                    multipleAnswers: question["parameters"]["mutliple_answers"].toLowerCase(),
+                                    callback: updateOutput
+            ));
+          }
+          break;
+          case "dropdown": {
+            collectionContents.add(DropdownQuestion(
+                                    id: question["id"],
+                                    text: question["question"],
+                                    weight: double.parse(question["weighting"]),
+                                    callback: updateOutput
+            ));
+          }
+          break;
+          default: {
+            print("No widget exists for ${question["parameters"]["type"]}");
+          }
+        }
+      }
+      collectionContents.add(new SurveyPageSpacer());
+      survey.add(QuestionCollection(title: section["category"], contents: collectionContents));
+    }
+    return survey;
+  }
+
+  void updateOutput(String key, dynamic value) {
+    _output["key"] = value;
+  }
+}
 
 class Services {
-  static String filename = "assets/questions.json";
   static String auditJson;
   // JG: where we store the map that will get sent to the API
   static Map<String, dynamic> outputData = {};
@@ -21,6 +112,11 @@ class Services {
     final String apiUrl = "https://z5vplyleb9.execute-api.ap-southeast-2.amazonaws.com/release/getQuestions";
     final String apiToken = "2T8hefWnH0XikA3yJLYAkQ";
 
+    // JG: first important part of the audit data
+    // JG: we clear the map first, so we don't get any lingering values
+    outputData.clear();
+    outputData["auditType"] = auditType;
+    
     final response = await http.post(apiUrl, body: json.encode({
       "token": apiToken,
       "auditType": auditType
@@ -36,9 +132,11 @@ class Services {
   static Future<List<QuestionCollection>> loadQuestion(String auditType) async {
     // Initialise Variables
     List<QuestionCollection> collections = List<QuestionCollection>();
+    String id;
     String title;
     String question;
     String type;
+    double weight;
 
     // Load in JSON data
     if (auditJson == null) {
@@ -64,19 +162,20 @@ class Services {
 
       // Create sections
       for (int i = 0; i < length; i++) {
-        // Get question and its type
+        // Get question and its types, as well as weights and id
+        id = questions[i]['id'].toString();
         question = questions[i]['question'].toString();
         type = questions[i]['parameters']['type'].toString();
-
+        weight = double.parse(questions[i]['weighting']);
         switch (type) {
           case "slider": {
               List options = questions[i]['parameters']['options'];
-              SliderQuestion slider = SliderQuestion(text: question, contents: options, updateData: updateData);
+              SliderQuestion slider = SliderQuestion(id: id, text: question, options: options, weight: weight, callback: updateData);
               contents.add(slider);
             }
             break;
             case "checkbox": {
-              CheckboxQuestion checkbox = CheckboxQuestion(text: question, updateData: updateData);
+              CheckboxQuestion checkbox = CheckboxQuestion(id: id, text: question, weight: weight, callback: updateData);
               contents.add(checkbox);
             }
             break;
@@ -84,13 +183,13 @@ class Services {
               List options = questions[i]['parameters']['options'];
               bool multipleAnswers = (questions[i]['parameters']['multiple_answers'].toLowerCase() == "true");
 
-              RadioQuestion radio = RadioQuestion(options: options, multipleAnswers: multipleAnswers, text: question, updateData: updateData);
+              RadioQuestion radio = RadioQuestion(id: id, options: options, multipleAnswers: multipleAnswers, text: question, weight: weight, callback: updateData);
               contents.add(radio);
             }
             break;
             case "dropdown": {
               List options = questions[i]['parameters']['options'];
-              DropDownQuestion dropdown = DropDownQuestion(title: question, options: options, updateData: updateData);
+              DropdownQuestion dropdown = DropdownQuestion(id: id, text: question, options: options, weight: weight, callback: updateData);
               contents.add(dropdown);
             }
             break;
@@ -301,7 +400,6 @@ class _SectionState extends State<Section> {
 // Question
 class Question extends StatefulWidget {
   final String text;
-  // final double weight;
 
   Question({Key key, this.text}) : super(key: key);
 
@@ -317,12 +415,13 @@ class _QuestionState extends State<Question> {
 
 // Slider Question
 class SliderQuestion extends StatefulWidget {
-  final String id;
-  final String text;
-  final List contents;
-  final void Function(String id, dynamic data) updateData;
+  String id;
+  String text;
+  List options;
+  double weight;
+  void Function(String id, dynamic data) callback;
 
-  SliderQuestion({Key key, this.id, this.text, this.contents, this.updateData}) : super(key: key);
+  SliderQuestion({Key key, this.id, this.text, this.options, this.weight, this.callback}) : super(key: key);
 
   @override
   _SliderQuestionState createState() => _SliderQuestionState();
@@ -330,7 +429,6 @@ class SliderQuestion extends StatefulWidget {
 class _SliderQuestionState extends State<SliderQuestion> {
   double _sliderVal = 0;
   String _hintLabel;
-
   @override
   Widget build(BuildContext ctx) {
     return Column(children: <Widget>[
@@ -338,15 +436,15 @@ class _SliderQuestionState extends State<SliderQuestion> {
       Slider(
         value: _sliderVal,
         min: 0,
-        max: (widget.contents.length - 1).toDouble(),
-        divisions: widget.contents.length - 1,
+        max: (widget.options.length - 1).toDouble(),
+        divisions: widget.options.length -1,
         label: _hintLabel,
         onChanged: (value) {
           setState(() {
             print("NEW VAL: $value");
             _sliderVal = value;
-            _hintLabel = widget.contents[value.toInt()];
-            widget.updateData(widget.id, value);
+            _hintLabel = widget.options[value.toInt()];
+            widget.callback(widget.id, value);
           });
         },
       )
@@ -358,9 +456,10 @@ class _SliderQuestionState extends State<SliderQuestion> {
 class CheckboxQuestion extends StatefulWidget {
   final String id;
   final String text;
-  final void Function(String id, dynamic data) updateData;
+  final double weight;
+  final void Function(String id, dynamic data) callback;
 
-  CheckboxQuestion({Key key, this.id, this.text, this.updateData}) : super(key: key);
+  CheckboxQuestion({Key key, this.id , this.text, this.weight, this.callback}) : super(key: key);
 
   @override
   _CheckboxQuestionState createState() => _CheckboxQuestionState();
@@ -381,7 +480,7 @@ class _CheckboxQuestionState extends State<CheckboxQuestion> {
         onChanged: (bool value) {
           setState(() {
             _yesVal = value;
-            widget.updateData(widget.id, value);
+            widget.callback(widget.id, value);
           });
         },
       ),
@@ -395,9 +494,10 @@ class RadioQuestion extends StatefulWidget {
   final String text;
   final List options;
   final bool multipleAnswers;
-  final void Function(String id, dynamic data) updateData;
+  final double weight;
+  final void Function(String id, dynamic data) callback;
 
-  RadioQuestion({Key key, this.id, this.text, this.options, this.multipleAnswers, this.updateData}) : super(key: key);
+  RadioQuestion({Key key,this.id, this.text, this.options, this.multipleAnswers, this.weight, this.callback}) : super(key: key);
 
   @override
   _RadioQuestionState createState() => _RadioQuestionState();
@@ -426,7 +526,7 @@ class _RadioQuestionState extends State<RadioQuestion> {
           setState(() {
             print("NEW VAL: " + value);
             _selected = value;
-            widget.updateData(widget.id, value);
+            widget.callback(widget.id, value);
           });
         },
       );
@@ -444,19 +544,20 @@ class _RadioQuestionState extends State<RadioQuestion> {
   }
 }
 
-class DropDownQuestion extends StatefulWidget {
+class DropdownQuestion extends StatefulWidget {
   final String id;
-  final String title;
+  final String text;
   final List options;
-  final void Function(String id, dynamic data) updateData;
+  final void Function(String id, dynamic data) callback;
+  final double weight;
 
-  DropDownQuestion({Key key, this.id, this.title, this.options, this.updateData}) : super(key: key);
+  DropdownQuestion({Key key, this.id, this.text, this.options, this.weight, this.callback}) : super(key: key);
 
   @override
-  _DropDownQuestionState createState() => _DropDownQuestionState();
+  _DropdownQuestionState createState() => _DropdownQuestionState();
 }
 
-class _DropDownQuestionState extends State<DropDownQuestion> {
+class _DropdownQuestionState extends State<DropdownQuestion> {
   String _value;
 
   String getData() {
@@ -470,7 +571,7 @@ class _DropDownQuestionState extends State<DropDownQuestion> {
     List<DropdownMenuItem<String>> optionsList = [];
 
     // Add QuestionTitle to list
-    widgetsList.add(Text(widget.title));
+    widgetsList.add(Text(widget.text));
 
     // Create drop down list options
     for (String option in widget.options) {
@@ -490,7 +591,7 @@ class _DropDownQuestionState extends State<DropDownQuestion> {
         onChanged: (value) {
           setState(() {
             _value = value;
-            widget.updateData(widget.id, value);
+            widget.callback(widget.id, value);
           });
         }
     );
@@ -521,7 +622,6 @@ class _DetailedReportSectionState extends State<DetailedReportSection> {
     );
   }
 }
-
 
 class TextLink extends StatefulWidget {
   final int section;

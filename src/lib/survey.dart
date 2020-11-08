@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 
 import 'qna.dart';
 import 'results.dart';
-import 'request_handler.dart';
 
 class Survey extends StatefulWidget {
   final String auditType;
   final String address;
   final int page;
+  final DataHandler handler = DataHandler();
   final bool editMode;
 
   Survey({Key key, this.auditType, this.address, this.page, this.editMode}) : super(key: key);
@@ -86,7 +86,7 @@ class _SurveyState extends State<Survey> {
 
   Widget getQuestionPages() {
     return FutureBuilder<List<QuestionCollection>>(
-        future: Services.loadQuestion(widget.auditType),
+        future: widget.handler.buildSurvey(widget.auditType),
         builder: (BuildContext ctx, AsyncSnapshot<List<QuestionCollection>> snapshot) {
           if (snapshot.hasData) {
             // Successfully loaded questions
@@ -112,7 +112,6 @@ class _SurveyState extends State<Survey> {
           return PageView(
             children: pageChildren,
             controller: _pageController,
-            keepPage: true,
             onPageChanged: (page) {
               setState(() {
                 currentPage = page;
@@ -171,9 +170,8 @@ class _SurveyState extends State<Survey> {
                   _pageController.jumpToPage(0);
                   Navigator.pop(context);
                   Navigator.push(
-                      context, MaterialPageRoute(builder: (context) => Results(widget.auditType, widget.address)));
+                    context, MaterialPageRoute(builder: (context) => Results(widget.auditType, widget.address)));
                   print("Reached end of survey!");
-                  print(Services.outputData);
                 },
                 child: Icon(Icons.done),
               )
