@@ -93,7 +93,7 @@ class DataHandler {
   }
 
   void updateOutput(String key, dynamic value) {
-    _output["key"] = value;
+    _output[key] = value;
   }
 }
 
