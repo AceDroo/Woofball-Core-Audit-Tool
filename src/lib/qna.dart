@@ -277,9 +277,10 @@ class SliderQuestion extends StatefulWidget {
   @override
   _SliderQuestionState createState() => _SliderQuestionState();
 }
-class _SliderQuestionState extends State<SliderQuestion> {
+class _SliderQuestionState extends State<SliderQuestion> with AutomaticKeepAliveClientMixin {
   double _sliderVal = 0;
   String _hintLabel;
+
   @override
   Widget build(BuildContext ctx) {
     return Column(children: <Widget>[
@@ -301,6 +302,17 @@ class _SliderQuestionState extends State<SliderQuestion> {
       )
     ]);
   }
+
+  @override
+  bool get wantKeepAlive => true;
+
+  void setValue(double value){
+    setState(() {
+      _sliderVal = value;
+      _hintLabel = widget.options[value.toInt()];
+      widget.callback(widget.id, value);
+    });
+  }
 }
 
 // Checkbox Question
@@ -315,7 +327,7 @@ class CheckboxQuestion extends StatefulWidget {
   @override
   _CheckboxQuestionState createState() => _CheckboxQuestionState();
 }
-class _CheckboxQuestionState extends State<CheckboxQuestion> {
+class _CheckboxQuestionState extends State<CheckboxQuestion> with AutomaticKeepAliveClientMixin {
   bool _yesVal = false;
   
   String getData() {
@@ -337,6 +349,9 @@ class _CheckboxQuestionState extends State<CheckboxQuestion> {
       ),
     ]);
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 // Radio Question
@@ -353,7 +368,7 @@ class RadioQuestion extends StatefulWidget {
   @override
   _RadioQuestionState createState() => _RadioQuestionState();
 }
-class _RadioQuestionState extends State<RadioQuestion> {
+class _RadioQuestionState extends State<RadioQuestion> with AutomaticKeepAliveClientMixin{
   String _selected;
   
   String getData() {
@@ -390,6 +405,9 @@ class _RadioQuestionState extends State<RadioQuestion> {
     );
   }
 
+  @override
+  bool get wantKeepAlive => true;
+
   String getSelected() {
     return _selected;
   }
@@ -408,7 +426,7 @@ class DropdownQuestion extends StatefulWidget {
   _DropdownQuestionState createState() => _DropdownQuestionState();
 }
 
-class _DropdownQuestionState extends State<DropdownQuestion> {
+class _DropdownQuestionState extends State<DropdownQuestion> with AutomaticKeepAliveClientMixin {
   String _value;
 
   String getData() {
@@ -452,6 +470,9 @@ class _DropdownQuestionState extends State<DropdownQuestion> {
       children: widgetsList
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class DetailedReportSection extends StatefulWidget {
