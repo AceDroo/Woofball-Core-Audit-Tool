@@ -35,7 +35,16 @@ class DataHandler {
     List sections = json.decode(auditJson)["body"]["questionsList"];
     for (var section in sections) {
       List<dynamic> questions = section["questions"];
-      List<StatefulWidget> collectionContents = <StatefulWidget>[];
+      List<Widget> collectionContents = <Widget>[];
+      collectionContents.add(Text(
+        section["category"], 
+          style: TextStyle(
+            color: Colors.blue, 
+            fontSize: 24, 
+            fontWeight: FontWeight.bold
+          )
+        )
+      );
       for (var question in questions) {
         String id = question["id"];
         String text = question["question"];
@@ -99,149 +108,7 @@ class DataHandler {
 
 class Services {
   static String auditJson;
-  // JG: where we store the map that will get sent to the API
-  static Map<String, dynamic> outputData = {};
 
-  // JG: handy callback for our methods to use for updating the
-  // outputData map
-  static void updateData(String key, dynamic val) {
-    outputData[key] = val;
-  }
-
-  static Future<String> _fetchAQuestion(String auditType) async {
-    final String apiUrl = "https://z5vplyleb9.execute-api.ap-southeast-2.amazonaws.com/release/getQuestions";
-    final String apiToken = "2T8hefWnH0XikA3yJLYAkQ";
-
-    // JG: first important part of the audit data
-    // JG: we clear the map first, so we don't get any lingering values
-    outputData.clear();
-    outputData["auditType"] = auditType;
-    
-    final response = await http.post(apiUrl, body: json.encode({
-      "token": apiToken,
-      "auditType": auditType
-    }));
-
-    if (200 == response.statusCode) {
-      debugPrint("Questions successfully loaded.");
-    }
-    return response.body.toString();
-  }
-
-
-  static Future<List<QuestionCollection>> loadQuestion(String auditType) async {
-    // Initialise Variables
-    List<QuestionCollection> collections = List<QuestionCollection>();
-    String id;
-    String title;
-    String question;
-    String type;
-    double weight;
-
-    // Load in JSON data
-    if (auditJson == null) {
-      auditJson = await _fetchAQuestion(auditType);
-    }
-
-    final responseData = json.decode(auditJson);
-    final questionData = responseData["body"]["questionsList"];
-
-    // Create sections with questions
-    for (var data in questionData) {
-      // Create contents
-      List<StatefulWidget> contents = List<StatefulWidget>();
-
-      // Get title, questions and question length
-      title = data["category"];
-      var questions = data["questions"];
-      int length = questions.length;
-
-      // Add section title
-      QuestionTitle sectionQuestionTitle = QuestionTitle(title: title);
-      contents.add(sectionQuestionTitle);
-
-      // Create sections
-      for (int i = 0; i < length; i++) {
-        // Get question and its types, as well as weights and id
-        id = questions[i]['id'].toString();
-        question = questions[i]['question'].toString();
-        type = questions[i]['parameters']['type'].toString();
-        weight = double.parse(questions[i]['weighting']);
-        switch (type) {
-          case "slider": {
-              List options = questions[i]['parameters']['options'];
-              SliderQuestion slider = SliderQuestion(id: id, text: question, options: options, weight: weight, callback: updateData);
-              contents.add(slider);
-            }
-            break;
-            case "checkbox": {
-              CheckboxQuestion checkbox = CheckboxQuestion(id: id, text: question, weight: weight, callback: updateData);
-              contents.add(checkbox);
-            }
-            break;
-            case "radio": {
-              List options = questions[i]['parameters']['options'];
-              bool multipleAnswers = (questions[i]['parameters']['multiple_answers'].toLowerCase() == "true");
-
-              RadioQuestion radio = RadioQuestion(id: id, options: options, multipleAnswers: multipleAnswers, text: question, weight: weight, callback: updateData);
-              contents.add(radio);
-            }
-            break;
-            case "dropdown": {
-              List options = questions[i]['parameters']['options'];
-              DropdownQuestion dropdown = DropdownQuestion(id: id, text: question, options: options, weight: weight, callback: updateData);
-              contents.add(dropdown);
-            }
-            break;
-            default:
-              debugPrint("Error: No question of type " + type + " is currently implemented!");
-            break;
-        }
-      }
-
-      // Add spacer at the end of the question page
-      SurveyPageSpacer spacer = SurveyPageSpacer();
-      contents.add(spacer);
-
-      // Create collection and it to contents
-      QuestionCollection collection = QuestionCollection(title: title, contents: contents);
-      collections.add(collection);
-    }
-
-    return collections;
-  }
-
-  static Future<List<Section>> loadSections(String auditType, PageController _controller) async {
-    // Initialise section variables
-    List<Section> sections = List<Section>();
-    String title;
-
-    // Load in JSON data
-    if (auditJson == null) {
-      auditJson = await  _fetchAQuestion(auditType);
-    }
-
-    final responseData = json.decode(auditJson);
-    final questionData = responseData["body"]["questionsList"];
-
-    // Add Sections Header
-    sections.add(new Section(title: "Header"));
-
-    int i = 0;
-    for (var data in questionData) {
-      // Get title
-      title = data["category"];
-
-      // Create section and add it to list
-      Section section = Section(title: title, page: i);
-      section.setController(_controller);
-      sections.add(section);
-
-      i++;
-    }
-
-    return sections;
-  }
   static Future<List<DetailedReportSection>> loadDetailedReport(String auditType, String _address) async {
     // Initialise variables
     List<DetailedReportSection> sections = List<DetailedReportSection>();
@@ -249,17 +116,12 @@ class Services {
     String question;
     int sectionNum = 0;
 
-    // Load in JSON data
-    if (auditJson == null) {
-      auditJson = await _fetchAQuestion(auditType);
-    }
-
     final responseData = json.decode(auditJson);
     final questionData = responseData["body"]["questionsList"];
 
     // Load in detailed report
     for (var data in questionData) {
-      List<StatefulWidget> contents = List<StatefulWidget>();
+      List<Widget> contents = List<Widget>();
 
       // Get title and total elements found
       title = data["category"];
@@ -290,20 +152,20 @@ class Services {
 class QuestionCollection extends StatefulWidget {
   final String title;
   final Map<String, dynamic> data = {};
-  final List<StatefulWidget> contents;
+final List<Widget> contents;
 
-  QuestionCollection({Key key, this.title, this.contents}) : super(key: key);
+QuestionCollection({Key key, this.title, this.contents}) : super(key: key);
 
-  @override
-  _QuestionCollectionState createState() => _QuestionCollectionState();
+@override
+_QuestionCollectionState createState() => _QuestionCollectionState();
 }
 
 class _QuestionCollectionState extends State<QuestionCollection> {
 
-  @override
-  Widget build(BuildContext ctx) {
-    ListView view = ListView(
-      padding: EdgeInsets.all(16.0),
+@override
+Widget build(BuildContext ctx) {
+  ListView view = ListView(
+    padding: EdgeInsets.all(16.0),
       children: <Widget>[
         DefaultTextStyle(
           style: Theme.of(context).textTheme.bodyText2,
@@ -364,11 +226,7 @@ class Section extends StatefulWidget {
   final int page;
   PageController controller;
 
-  Section({Key key, this.title, this.page}) : super(key : key);
-
-  void setController(PageController controller) {
-    this.controller = controller;
-  }
+  Section({Key key, this.title, this.page, this.controller}) : super(key : key);
 
   @override
   _SectionState createState() => _SectionState();
@@ -377,13 +235,6 @@ class Section extends StatefulWidget {
 class _SectionState extends State<Section> {
   @override
   Widget build(BuildContext context) {
-    if (widget.title == "Header") {
-      return Center(
-        heightFactor: 2,
-        child: Text (
-          "Sections", style: TextStyle(color: Colors.blue, fontSize: 24, fontWeight: FontWeight.bold))
-      );
-    }
     return ListTile(
         title: Text(widget.title),
         onTap: () {

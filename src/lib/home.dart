@@ -122,6 +122,7 @@ class _HomeState extends State<Home> {
     final GoogleMapController controller = await _mapController.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(
         CameraPosition(target: _curPos, zoom: 15)));
+    _addMarker(_curPos);
   }
 
   Future<void> _updateMap() async {

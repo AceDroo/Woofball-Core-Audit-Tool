@@ -30,62 +30,80 @@ class _QuestionTypePageState extends State<QuestionTypePage> {
               Navigator.pop(context);
             }),
       ),
-        //RadioQuestion locationQuestion = RadioQuestion(text: "Is the audited location a road segment or an intersection?", options: ["Segment", "Intersection"], multipleAnswers: false);
-      body: ListView (
+      body: ListView(
         children: [
-          Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text("\nAudit Type", style: TextStyle(color: Colors.blue, fontSize: 24, fontWeight: FontWeight.bold)),
-              ]),
-          Row(
+          Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text("Is the audited location a segment or an intersection?")
-            ],
-          ),
-          RadioListTile(
-            title: Text("Segment"),
-            value: "Segment",
-            groupValue: _selected,
-            onChanged: (String value) {
-              setState(() {
-                _selected = value;
-              });
-            }
-          ),
-          RadioListTile(
-            title: Text("Intersection"),
-            value: "Intersection",
-            groupValue: _selected,
-            onChanged: (String value) {
-              setState(() {
-                _selected = value;
-              });
-            }
-          )
-            ]
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: <Widget>[
-            FloatingActionButton(
-                heroTag: 'nextFAB',
-                onPressed: () {
-                  Navigator.pop(context); // Closes drawer
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                      builder: (context) => Survey(auditType: _selected, address: widget.address, page: 0, editMode: false), // Go to initial survey page
-                  ));
-                },
-                child: Icon(Icons.navigate_next),
+              SizedBox(height:15),
+              Text(
+                "Audit Type", 
+                style: TextStyle(
+                  color: Colors.blue, 
+                  fontSize: 24, 
+                  fontWeight: FontWeight.bold
+                )
               ),
-          ],
-        ),
+              SizedBox(height:15),
+              Text("Are you auditing a segment of road or an intersection?"),
+              SizedBox(height:15),
+            ]
+          ),
+          ButtonBar(
+            alignment: MainAxisAlignment.center,
+            children: <Widget>[
+              ElevatedButton(
+                child: Text("SEGMENT"),
+                style: ButtonStyle(
+                  elevation: MaterialStateProperty.all<double>(15),
+                  minimumSize: MaterialStateProperty.all<Size>(Size(500,50)),
+                  enableFeedback: true,
+                  backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
+                  foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Survey(
+                        auditType: "Segment", 
+                        address: widget.address,
+                        page: 0,
+                        editMode: false
+                      )
+                    )
+                  );
+                }
+              ),
+              SizedBox(height:25),
+              ElevatedButton(
+                child: Text("INTERSECTION"),
+                style: ButtonStyle(
+                  elevation: MaterialStateProperty.all<double>(15),
+                  minimumSize: MaterialStateProperty.all<Size>(Size(500,50)),
+                  enableFeedback: true,
+                  backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
+                  foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Survey(
+                        auditType: "Intersection", 
+                        address: widget.address,
+                        page: 0,
+                        editMode: false
+                      )
+                    )
+                  );
+                }
+              )
+            ]
+          )
+        ]
       ),
     );
   }

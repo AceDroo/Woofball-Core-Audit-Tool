@@ -21,12 +21,10 @@ class _SurveyState extends State<Survey> {
   int totalPages = 0;
   bool currentUnset = true;
   PageController _pageController;
-  List<Widget> pageChildren;
-  List<Widget> sectionsChildren;
 
-  PageView questionPage;
+  List<Widget> pages;
+  List<Widget> sections = List<Widget>();
   FutureBuilder<List<QuestionCollection>> questions;
-  FutureBuilder<List<Section>> sections;
 
   @override
   void initState() {
@@ -41,12 +39,7 @@ class _SurveyState extends State<Survey> {
 
     // Get survey questions
     if (questions == null) {
-      questions = getQuestionPages();
-    }
-
-    // Get survey sections
-    if (sections == null) {
-      sections = getSections();
+      questions = loadSurvey();
     }
   }
 
@@ -56,61 +49,71 @@ class _SurveyState extends State<Survey> {
     super.dispose();
   }
 
-  Widget getSections() {
-    return FutureBuilder<List<Section>>(
-        future: Services.loadSections(widget.auditType, _pageController),
-        builder: (BuildContext context, AsyncSnapshot<List<Section>> snapshot) {
-          if (snapshot.hasData) {
-            // Successfully loaded in sections
-            print("DEBUG: Sections loaded from remote source.");
-            sectionsChildren = snapshot.data;
-          } else if (snapshot.hasError) {
-            // Error occured while loading data
-            print("ERROR: ${snapshot.error}");
-            sectionsChildren = <Widget>[
-              Text("THERE WAS A FATAL ERROR! Unable to obtain question data")
-            ];
-          } else {
-            print("DEBUG: Attempting to obtain sections from remote source...");
-            sectionsChildren = <Widget>[
-              Text("...")
-            ];
-          }
-
-          return Drawer(
-            child: ListView (children: sectionsChildren)
-          );
-        }
-    );
-  }
-
-  Widget getQuestionPages() {
+  Widget loadSurvey() {
     return FutureBuilder<List<QuestionCollection>>(
         future: widget.handler.buildSurvey(widget.auditType),
         builder: (BuildContext ctx, AsyncSnapshot<List<QuestionCollection>> snapshot) {
           if (snapshot.hasData) {
-            // Successfully loaded questions
-            print("DEBUG: Questions loaded from remote source.");
-            pageChildren = snapshot.data;
+            print("Questions loaded from remote source.");
+            pages = snapshot.data;
+            int n = 0;
+            sections.add(Container(
+                margin: EdgeInsets.all(15),
+                child: Text(
+                  "Jump to Category...", 
+                  style: TextStyle(
+                    color: Colors.blue, 
+                    fontSize: 24, 
+                    fontWeight: FontWeight.bold
+                  )
+                )
+              )
+            );
+            for (QuestionCollection page in pages){
+              sections.add(Section(title: page.title, page: n++, controller: _pageController));
+            }
           } else if (snapshot.hasError) {
             // Error occurred while loading data
-            print("ERROR: ${snapshot.error}");
-            pageChildren = <Widget>[
-              Text("THERE WAS A FATAL ERROR! Unable to obtain question data"),
+            print("Questions couldn't be fetched:\n ${snapshot.error}");
+            pages = <Widget>[
+              Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Icon(
+                        Icons.warning,
+                        color: Colors.yellow,
+                        size: 50.0,
+                        semanticLabel: "Connection error."
+                    ),
+                    SizedBox(height:15),
+                    Text(
+                        "We failed to fetch the audit questions at this time, please try to create a new audit.",
+                        textAlign: TextAlign.center)
+                  ]
+              )
             ];
           } else {
-            print("DEBUG: Attempting to obtain questions from remote source...");
-            pageChildren = <Widget>[
-              Text("..."),
+            print("Attempting to obtain questions from remote source...");
+            pages = <Widget>[
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  CircularProgressIndicator(),
+                  SizedBox(height:15),
+                  Text("Fetching audit questions...")
+                ]
+              )
             ];
           }
 
           // Calculate total pages
-          totalPages = pageChildren.length;
+          totalPages = pages.length;
 
           // Return survey pages
           return PageView(
-            children: pageChildren,
+            children: pages,
             controller: _pageController,
             onPageChanged: (page) {
               setState(() {
@@ -136,22 +139,29 @@ class _SurveyState extends State<Survey> {
             }),
       ),
       body: questions,
-      drawer: sections,
+      drawer: Drawer(
+          child: ListView(
+              children: sections
+          )
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            FloatingActionButton(
-              heroTag: 'prevFAB',
-              onPressed: () {
-                _pageController.animateToPage(_pageController.page.toInt() - 1,
-                    duration: Duration(milliseconds: 500),
-                    curve: Curves.easeInOut);
-              },
-              child: Icon(Icons.navigate_before),
-            ),
+            if (currentPage > 0)
+              FloatingActionButton(
+                heroTag: 'prevFAB',
+                onPressed: () {
+                  _pageController.animateToPage(_pageController.page.toInt() - 1,
+                      duration: Duration(milliseconds: 500),
+                      curve: Curves.easeInOut);
+                },
+                child: Icon(Icons.navigate_before),
+              ),
+            if (currentPage == 0)
+              SizedBox(width:10),
             if ((currentPage < totalPages - 1 || currentPage == 0) && (!widget.editMode))
               FloatingActionButton(
                 heroTag: 'nextFAB',
@@ -168,7 +178,6 @@ class _SurveyState extends State<Survey> {
                 heroTag: 'submitFAB',
                 onPressed: () {
                   _pageController.jumpToPage(0);
-                  Navigator.pop(context);
                   Navigator.push(
                     context, MaterialPageRoute(builder: (context) => Results(widget.auditType, widget.address)));
                   print("Reached end of survey!");
