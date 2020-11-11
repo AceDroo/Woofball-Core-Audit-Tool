@@ -11,6 +11,7 @@ import 'settings.dart';
 import 'question_type.dart';
 
 class Home extends StatefulWidget {
+  LatLng _curPos = new LatLng(0,0);
   Home({Key key, this.title}) : super(key: key);
 
   final String title;
@@ -23,7 +24,6 @@ class _HomeState extends State<Home> {
   Set<Marker> _markers = {};
   Set<Circle> _circles = {};
   bool _showNewSurvey = false;
-  LatLng _curPos;
   String _addr;
   String _mapStyle;
   MapType _currentMapType = MapType.normal;
@@ -62,8 +62,8 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _addMarker(LatLng latlng) async {
-    _curPos = latlng;
-    _addr = await _getAddress(_curPos);
+    widget._curPos = latlng;
+    _addr = await _getAddress(widget._curPos);
     setState(() {
       _markers.clear();
       _circles.clear();
@@ -118,11 +118,11 @@ class _HomeState extends State<Home> {
     }
 
     _locationData = await _location.getLocation();
-    _curPos = LatLng(_locationData.latitude, _locationData.longitude);
+    widget._curPos = LatLng(_locationData.latitude, _locationData.longitude);
     final GoogleMapController controller = await _mapController.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: _curPos, zoom: 15)));
-    _addMarker(_curPos);
+        CameraPosition(target: widget._curPos, zoom: 15)));
+    _addMarker(widget._curPos);
   }
 
   Future<void> _updateMap() async {
@@ -251,7 +251,7 @@ class _HomeState extends State<Home> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => QuestionTypePage(address: _addr, latlng: _curPos), // Go to survey page
+                        builder: (context) => QuestionTypePage(address: _addr, latlng: widget._curPos), // Go to survey page
                       ),
                     );
                 },

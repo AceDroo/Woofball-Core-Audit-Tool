@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'survey.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
+import 'package:geocoder/geocoder.dart';
 
 class DataHandler {
   final Map<String, dynamic> _output = {"auditType": "", 
@@ -43,6 +44,15 @@ class DataHandler {
 
     // JG: first important part of the audit record
     updateOutput("auditType", auditType);
+    updateOutput("latlng", latlng.toString());
+    final coords = new Coordinates(latlng.latitude, latlng.longitude);
+    var addresses = await Geocoder.local.findAddressesFromCoordinates(coords);
+    var first = addresses.first;
+    Map<String, String> foundLocation = {};
+    foundLocation["country"] = first.countryName;
+    foundLocation["state"] = first.adminArea;
+    foundLocation["locale"] = first.locality;
+    updateOutput("location", foundLocation);
 
     // JG: building the questions and adding them to collections
     List sections = json.decode(auditJson)["body"]["questionsList"];
@@ -64,6 +74,9 @@ class DataHandler {
         List<dynamic> options = question["parameters"]["options"];
         print(options);
         double weight = double.parse(question["weighting"]); 
+        // JG: the holy grail switch!
+        // if you add new question types, this handles how they're added to the survey page. 
+        // if it gets too large you might consider ripping this out and making it its own method/dart file.
         switch(question["parameters"]["type"]) {
           case "slider": {
             collectionContents.add(SliderQuestion(
@@ -114,10 +127,12 @@ class DataHandler {
     return survey;
   }
 
+  // JG: convenience method for updating output values
+  // use with care - this is getting jsonified for the API
   void updateOutput(String key, dynamic value) {
     _output[key] = value;
     print("output updated, here's the new vals:");
-    print(_output);
+    print(_output.toString());
   }
 }
 
