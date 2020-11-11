@@ -3,9 +3,19 @@ import 'dart:async' show Future;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'survey.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
 
 class DataHandler {
-  final Map<String, dynamic> _output = {};
+  final Map<String, dynamic> _output = {"auditType": "", 
+                                        "detailedReport": [], 
+                                        "latlng": "",
+                                        "location": {"country": "",
+                                                     "state": "",
+                                                     "locale": ""
+                                                    },
+                                        "score": "",
+                                        "summaryReport": []
+                                        };
   List<QuestionCollection> survey = List<QuestionCollection>();
   
   // JG: API url and token
@@ -27,9 +37,12 @@ class DataHandler {
 
   // JG: Using the received json, we can build a survey
   // out of our various question widgets defined in this library
-  Future<List<QuestionCollection>> buildSurvey(String auditType) async {
+  Future<List<QuestionCollection>> buildSurvey(String auditType, LatLng latlng) async {
     List<QuestionCollection> survey = <QuestionCollection>[];
     String auditJson = await _fetchQuestions(auditType); 
+
+    // JG: first important part of the audit record
+    updateOutput("auditType", auditType);
 
     // JG: building the questions and adding them to collections
     List sections = json.decode(auditJson)["body"]["questionsList"];
@@ -103,6 +116,8 @@ class DataHandler {
 
   void updateOutput(String key, dynamic value) {
     _output[key] = value;
+    print("output updated, here's the new vals:");
+    print(_output);
   }
 }
 

@@ -1,14 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
+
 import 'survey.dart';
 
 class QuestionTypePage extends StatefulWidget {
   final String address;
+  final LatLng latlng;
 //  final int page;
 //  final bool editMode;
 
 //  QuestionTypePage({Key key, this.address, this.page, this.editMode}) : super(key: key);
-  QuestionTypePage({Key key, this.address}) : super(key: key);
+  QuestionTypePage({Key key, this.address, this.latlng}) : super(key: key);
 
   _QuestionTypePageState createState() => _QuestionTypePageState();
 }
@@ -94,6 +97,7 @@ class _QuestionTypePageState extends State<QuestionTypePage> {
                       builder: (context) => Survey(
                         auditType: "Intersection", 
                         address: widget.address,
+                        latlng: widget.latlng,
                         page: 0,
                         editMode: false
                       )

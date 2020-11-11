@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
 
 import 'qna.dart';
 import 'results.dart';
@@ -7,11 +8,12 @@ import 'results.dart';
 class Survey extends StatefulWidget {
   final String auditType;
   final String address;
+  final LatLng latlng;
   final int page;
   final DataHandler handler = DataHandler();
   final bool editMode;
 
-  Survey({Key key, this.auditType, this.address, this.page, this.editMode}) : super(key: key);
+  Survey({Key key, this.auditType, this.address, this.latlng, this.page, this.editMode}) : super(key: key);
 
   _SurveyState createState() => _SurveyState();
 }
@@ -51,7 +53,7 @@ class _SurveyState extends State<Survey> {
 
   Widget loadSurvey() {
     return FutureBuilder<List<QuestionCollection>>(
-        future: widget.handler.buildSurvey(widget.auditType),
+        future: widget.handler.buildSurvey(widget.auditType, widget.latlng),
         builder: (BuildContext ctx, AsyncSnapshot<List<QuestionCollection>> snapshot) {
           if (snapshot.hasData) {
             print("Questions loaded from remote source.");
