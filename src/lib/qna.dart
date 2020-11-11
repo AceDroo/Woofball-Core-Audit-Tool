@@ -20,17 +20,29 @@ class DataHandler {
   List<QuestionCollection> survey = List<QuestionCollection>();
   
   // JG: API url and token
-  final String _apiURL = "https://z5vplyleb9.execute-api.ap-southeast-2.amazonaws.com/release/getQuestions";
+  final String _apiURL = "https://z5vplyleb9.execute-api.ap-southeast-2.amazonaws.com/release/";
   final String _apiToken = "2T8hefWnH0XikA3yJLYAkQ";
 
+  Future<String> fetchAudits() async {
+    var response = await http.post(_apiURL + "getAllAudits", body: json.encode({
+      "token": _apiToken
+    }));
+
+    if (200 != response.statusCode) {
+      throw("Unable to gather Questions from remote source: $_apiURL");
+    }
+    debugPrint("Received status code 200 from remote source: $_apiURL");
+    return response.body.toString();
+  }
+
   Future<String> _fetchQuestions(String auditType) async {
-    var response = await http.post(_apiURL, body: json.encode({
+    var response = await http.post(_apiURL + "getQuestions", body: json.encode({
       "token": _apiToken,
       "auditType": auditType
     }));
 
     if (200 != response.statusCode) {
-      throw("Unable to gather Questions from remote source: $_apiURL");
+      throw("Unable to gather Audits from remote source: $_apiURL");
     }
     debugPrint("Received status code 200 from remote source: $_apiURL");
     return response.body.toString();

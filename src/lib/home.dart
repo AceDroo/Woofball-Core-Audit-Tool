@@ -1,11 +1,12 @@
 import 'dart:async';
-
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:location/location.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'qna.dart';
 import 'search_bar.dart';
 import 'settings.dart';
 import 'question_type.dart';
@@ -15,6 +16,7 @@ class Home extends StatefulWidget {
   Home({Key key, this.title}) : super(key: key);
 
   final String title;
+  final DataHandler handler = DataHandler();
 
   _HomeState createState() => _HomeState();
 }
@@ -125,6 +127,17 @@ class _HomeState extends State<Home> {
     _addMarker(widget._curPos);
   }
 
+  Future<void> _getAudits() async {
+    String auditJson = await widget.handler.fetchAudits();
+
+    List audits = json.decode(auditJson)["body"]["auditsFound"];
+    for (var audit in audits) {
+      String auditType = audit["auditType"];
+      String latlng = audit["latlng"];
+      debugPrint(auditType + ", " + latlng);
+    }
+  }
+
   Future<void> _updateMap() async {
     GoogleMapController controller = await _mapController.future;
     setState(() {
@@ -172,6 +185,7 @@ class _HomeState extends State<Home> {
                 print("I got tapped @ $latlng");
                 _addMarker(latlng);
                 _updateCamera(latlng.toString());
+                _getAudits();
               },
               mapType: _currentMapType,
             ),
