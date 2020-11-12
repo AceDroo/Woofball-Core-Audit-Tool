@@ -25,6 +25,8 @@ class _HomeState extends State<Home> {
   Completer<GoogleMapController> _mapController = Completer();
   Set<Marker> _markers = {};
   Set<Circle> _circles = {};
+  Marker _curMarker;
+  Circle _curCircle;
   bool _showNewSurvey = false;
   String _addr;
   String _mapStyle;
@@ -67,21 +69,23 @@ class _HomeState extends State<Home> {
     widget._curPos = latlng;
     _addr = await _getAddress(widget._curPos);
     setState(() {
-      _markers.clear();
-      _circles.clear();
-      _markers.add(Marker(
+      _markers.remove(_curMarker);
+      _markers.remove(_curCircle);
+      _curMarker = new Marker(
         markerId: MarkerId(latlng.toString()),
         position: latlng,
         icon: surveyNew,
-      ));
-      _circles.add(Circle(
+      );
+      _curCircle = new Circle(
         circleId: CircleId(latlng.toString()),
         center: latlng,
         radius: 200.0,
         fillColor: Colors.blueAccent.withOpacity(0.5),
         strokeWidth: 3,
         strokeColor: Colors.blueAccent,
-      ));
+      );
+      _markers.add(_curMarker);
+      _circles.add(_curCircle);
       _showNewSurvey = true;
     });
   }
@@ -133,8 +137,17 @@ class _HomeState extends State<Home> {
     List audits = json.decode(auditJson)["body"]["auditsFound"];
     for (var audit in audits) {
       String auditType = audit["auditType"];
-      String latlng = audit["latlng"];
-      debugPrint(auditType + ", " + latlng);
+      var latlngString = audit["latlng"].split(", ");
+      double latitude = double.parse(latlngString[0]);
+      double longitude = double.parse(latlngString[1]);
+
+      LatLng latlng = new LatLng(latitude, longitude);
+
+      _markers.add(Marker(
+        markerId: MarkerId(latlng.toString()),
+        position: latlng,
+        icon: surveyNew,
+      ));
     }
   }
 
