@@ -52,6 +52,7 @@ class _HomeState extends State<Home> {
         .then((onValue) {
       surveyComplete = onValue;
     });
+    _getAudits();
   }
 
   Future<String> _getAddress(LatLng latlng) async {
@@ -70,7 +71,7 @@ class _HomeState extends State<Home> {
     _addr = await _getAddress(widget._curPos);
     setState(() {
       _markers.remove(_curMarker);
-      _markers.remove(_curCircle);
+      _circles.remove(_curCircle);
       _curMarker = new Marker(
         markerId: MarkerId(latlng.toString()),
         position: latlng,
@@ -198,7 +199,6 @@ class _HomeState extends State<Home> {
                 print("I got tapped @ $latlng");
                 _addMarker(latlng);
                 _updateCamera(latlng.toString());
-                _getAudits();
               },
               mapType: _currentMapType,
             ),
