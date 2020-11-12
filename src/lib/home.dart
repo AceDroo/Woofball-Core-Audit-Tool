@@ -33,7 +33,8 @@ class _HomeState extends State<Home> {
   MapType _currentMapType = MapType.normal;
 
   BitmapDescriptor surveyNew;
-  BitmapDescriptor surveyComplete;
+  BitmapDescriptor surveyIntersectionComplete;
+  BitmapDescriptor surveySegmentComplete;
 
   void loadMapStyle(String file) async {
     rootBundle.loadString(file).then((x) => {_mapStyle = x});
@@ -48,10 +49,16 @@ class _HomeState extends State<Home> {
       surveyNew = onValue;
     });
     BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(48, 48)),
-            'assets/survey_complete.bmp')
+            'assets/intersection_complete.bmp')
         .then((onValue) {
-      surveyComplete = onValue;
+      surveyIntersectionComplete = onValue;
     });
+    BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(48, 48)),
+        'assets/segment_complete.bmp')
+        .then((onValue) {
+      surveySegmentComplete = onValue;
+    });
+
     _getAudits();
   }
 
@@ -144,10 +151,12 @@ class _HomeState extends State<Home> {
 
       LatLng latlng = new LatLng(latitude, longitude);
 
+      var auditIcon = (auditType == "Intersection" ? surveyIntersectionComplete : surveySegmentComplete);
+
       _markers.add(Marker(
         markerId: MarkerId(latlng.toString()),
         position: latlng,
-        icon: surveyNew,
+        icon: auditIcon,
       ));
     }
   }
@@ -173,8 +182,7 @@ class _HomeState extends State<Home> {
     });
   }
 
-  static final CameraPosition _wollongongCam =
-      CameraPosition(bearing: 0, target: LatLng(-34.4278, 150.8931), zoom: 10);
+  static final CameraPosition _wollongongCam = CameraPosition(bearing: 0, target: LatLng(-34.4278, 150.8931), zoom: 10);
 
   GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
 

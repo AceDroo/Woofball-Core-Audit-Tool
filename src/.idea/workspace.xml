@@ -24,11 +24,15 @@
   <component name="PropertiesComponent">
     <property name="dart.analysis.tool.window.force.activate" value="false" />
     <property name="io.flutter.reload.alreadyRun" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/assets" />
     <property name="show.migrate.to.gradle.popup" value="false" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Mitchell\Desktop\Uni Projects\Core Audit Tool\core-audit\src\assets" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Mitchell\Desktop\Uni Projects\Core Audit Tool\core-audit\src\assets" />
       <recent name="C:\Users\Mitchell\Desktop\Uni Projects\Core Audit Tool\core-audit\src\android\app" />
     </key>
   </component>
