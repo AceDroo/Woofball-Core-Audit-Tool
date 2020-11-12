@@ -72,6 +72,7 @@ class _QuestionTypePageState extends State<QuestionTypePage> {
                       builder: (context) => Survey(
                         auditType: "Segment", 
                         address: widget.address,
+                        latlng: widget.latlng,
                         page: 0,
                         editMode: false
                       )
